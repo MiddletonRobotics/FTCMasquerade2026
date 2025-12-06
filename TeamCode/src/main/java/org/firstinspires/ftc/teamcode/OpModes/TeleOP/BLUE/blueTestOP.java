@@ -6,7 +6,6 @@ import org.firstinspires.ftc.teamcode.subsystems.Masquerade;
 
 @TeleOp (name = "BLUE TeleOP Test", group = "BLUE Alliance")
 public class blueTestOP extends OpMode {
-
     private Masquerade Robot;
 
     @Override
@@ -18,7 +17,6 @@ public class blueTestOP extends OpMode {
     @Override
     public void start() {
         Robot.dt.follower.setMaxPower(0.85);
-        Robot.dt.enableTeleop();
         Robot.start();
     }
 

@@ -97,13 +97,13 @@ public class LeaveAuto extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             timer.resetTimer();
-            shooter.setPower(0.80);
+            //shooter.setPower(0.80);
             //hoodServo.setPosition(0.);
             while (timer.getElapsedTimeSeconds() < 1.5) {
-                leftFront.setPower(-0.5);
-                rightFront.setPower(-0.5);
-                leftBack.setPower(-0.5);
-                rightBack.setPower(-0.5);
+                leftFront.setPower(0.5);
+                rightFront.setPower(0.5);
+                leftBack.setPower(0.5);
+                rightBack.setPower(0.5);
             }
             timer.resetTimer();
             leftFront.setPower(0.0);

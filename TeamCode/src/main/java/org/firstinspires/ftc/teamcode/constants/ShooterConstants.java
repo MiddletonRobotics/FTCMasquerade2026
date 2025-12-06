@@ -20,6 +20,6 @@ public class ShooterConstants {
     public static final double hoodMax  = 0.55;
 
     public static double closeShot = 1400;
-    public static double midShot = 1600;
+    public static double midShot = 1750;
     public static double farShot = 1950;
 }

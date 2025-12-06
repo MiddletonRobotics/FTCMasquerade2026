@@ -6,7 +6,6 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 
-
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -24,7 +23,6 @@ import static org.firstinspires.ftc.teamcode.constants.ShooterConstants.kp;
 import static org.firstinspires.ftc.teamcode.constants.ShooterConstants.ki;
 import static org.firstinspires.ftc.teamcode.constants.ShooterConstants.kd;
 import static org.firstinspires.ftc.teamcode.constants.ShooterConstants.shooterMotorID;
-
 
 import java.lang.Math;
 import java.util.List;
@@ -62,7 +60,7 @@ public class Shooter extends SubsystemBase {
         shooterMotor = new MotorEx(hmap, shooterMotorID, Motor.GoBILDA.BARE);
         shooterMotor.setRunMode(Motor.RunMode.RawPower);
         shooterMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        shooterMotor.motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor.motor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         shooterEncoder = shooterMotor.encoder;
 
@@ -83,22 +81,20 @@ public class Shooter extends SubsystemBase {
 
         flyWheelEnabled = false;
 
+        // ***** FIXED ALLIANCE STORAGE *****
         this.Alliance = Alliance.toUpperCase();
 
         flyWheelEnabled = true;
 
         targetVelocity = 100; //Default value
 
-        tagList=limelight.getLatestResult().getFiducialResults();
-
-        Alliance.toUpperCase();
+        tagList = limelight.getLatestResult().getFiducialResults();
 
         this.telemetry = telemetry;
     }
 
     @Override
     public void periodic() {
-        //Current Shooter Velocity
         currentMotorVelocity = getMotorVelocity();
         currentEncoderVelocity = getVelocity();
 
@@ -107,7 +103,7 @@ public class Shooter extends SubsystemBase {
 
         currentDistance = getCamDistance();
 
-       currentTag = getTag();
+        currentTag = getTag();
 
         motorController.setPIDF(kp, ki, kd, kf);
 
@@ -117,12 +113,10 @@ public class Shooter extends SubsystemBase {
             stopMotor();
         }
 
-        //Telemetry
         telemetry.addData(("Encoder Velocity: "), currentEncoderVelocity);
         telemetry.addData(("Motor Velocity: "), currentMotorVelocity);
-        telemetry.addData(("Target RPM: "), targetVelocity);
-        //telemetry.addData(("Current RPM"), cur)
-        telemetry.addData(("Fly Wheel Enabled: "), flyWheelEnabled);
+        telemetry.addData("Target RPM: ", targetVelocity);
+        telemetry.addData("Fly Wheel Enabled: ", flyWheelEnabled);
         telemetry.addData(("Servo Position: "), hoodServo.getRawPosition());
 
         telemetry.addLine("");
@@ -174,14 +168,12 @@ public class Shooter extends SubsystemBase {
 
     public void enableFlyWheel() {
         flyWheelEnabled = true;
+        targetVelocity = 100;
     }
 
     public void setShooterVelocity() {
-//        shooterMotor.setVeloCoefficients(kp, ki, kd);
-
         motorController.setPIDF(kp, ki, kd, kf);
-
-        shooterMotor.motor.setPower(-(motorController.calculate(currentMotorVelocity, targetVelocity)));
+        shooterMotor.motor.setPower((motorController.calculate(currentMotorVelocity, targetVelocity)));
     }
 
     public void setServoPos() {
@@ -205,10 +197,8 @@ public class Shooter extends SubsystemBase {
                 hoodServo.set(0);
             }
         }
-
     }
 
-    //Manual Servo Control:
     public void setHoodServoPos(Double POS) {
         hoodServo.set(POS);
     }
@@ -224,67 +214,85 @@ public class Shooter extends SubsystemBase {
         return (aprilTagHeight - LLHeight) / Math.tan(angleToGoalRadians);
     }
 
+    // ***** FULLY UPDATED getTag() WITH LOGGING INTEGRATED *****
     public LLResultTypes.FiducialResult getTag()
     {
-        // Get the latest tag list every time this method is called
-        tagList = limelight.getLatestResult().getFiducialResults();
+        LLResult latest = limelight.getLatestResult();
+        if (latest == null) {
+            telemetry.addLine("[TAG] Latest Limelight result NULL");
+            return null;
+        }
 
-        LLResultTypes.FiducialResult target= null;
-        if(Alliance.equals("BLUE"))
-        {
-            if (tagList!=null)
-            {
-                for(LLResultTypes.FiducialResult tar:tagList)
-                {
-                    if(tar!=null && tar.getFiducialId() == 20)
-                    {
-                        target=tar;
-                        break;
-                    }
+        if (!latest.isValid()) {
+            telemetry.addLine("[TAG] Latest Limelight result INVALID");
+            return null;
+        }
+
+        tagList = latest.getFiducialResults();
+
+        if (tagList == null || tagList.isEmpty()) {
+            telemetry.addLine("[TAG] No fiducials detected");
+            return null;
+        }
+
+        int targetID = Alliance.equals("BLUE") ? 20 : 24;
+        telemetry.addData("[TAG] Alliance", Alliance);
+        telemetry.addData("[TAG] Looking for ID", targetID);
+
+        LLResultTypes.FiducialResult bestTag = null;
+        double bestScore = Double.MAX_VALUE;
+
+        for (LLResultTypes.FiducialResult tag : tagList) {
+
+            if (tag == null) continue;
+
+            telemetry.addData("[TAG] Seen ID", tag.getFiducialId());
+            telemetry.addData("[TAG] Tx", tag.getTargetXDegrees());
+            telemetry.addData("[TAG] Ty", tag.getTargetYDegrees());
+
+            if (tag.getFiducialId() == targetID) {
+
+                double score = Math.abs(tag.getTargetXDegrees());
+
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestTag = tag;
                 }
             }
         }
-        else if(Alliance.equals("RED"))
-        {
-            if(tagList!=null)
-            {
-                for(LLResultTypes.FiducialResult tar:tagList)
-                {
-                    if(tar!=null && tar.getFiducialId() == 24)
-                    {
-                        target=tar;
-                        break;
-                    }
-                }
-            }
+
+        if (bestTag == null) {
+            telemetry.addLine("[TAG] Correct alliance tag NOT FOUND");
+        } else {
+            telemetry.addData("[TAG] Selected Tag", bestTag.getFiducialId());
+            telemetry.addData("[TAG] Final Tx", bestTag.getTargetXDegrees());
         }
-        return target;
+
+        return bestTag;
     }
-
-    //Shooter Methods
 
     public void shootClose() {
         targetVelocity = ShooterConstants.closeShot;
-        setShooterVelocity();
     }
 
     public void shootMid() {
         targetVelocity = ShooterConstants.midShot;
-        setShooterVelocity();
     }
 
     public void shootFar() {
         targetVelocity = ShooterConstants.farShot;
-        setShooterVelocity();
     }
 
     public void idleRPM() {
         targetVelocity = 200;
-        setShooterVelocity();
+    }
+
+    public void setRPM(double RPM) {
+        targetVelocity = RPM;
     }
 
     public boolean isAtSpeed() {
         double error = Math.abs(targetVelocity - currentMotorVelocity);
-        return error < 25; // <-- adjust tolerance as needed
+        return error < 25;
     }
 }

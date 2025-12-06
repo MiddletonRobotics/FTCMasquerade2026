@@ -80,6 +80,8 @@ public class Turret extends SubsystemBase {
         turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         limelight = hMap.get(Limelight3A.class, "limelight");
@@ -295,28 +297,13 @@ public class Turret extends SubsystemBase {
         LLResultTypes.FiducialResult target = null;
 
         if (Alliance.equals("BLUE")) {
-            if (tagList != null) {
-                for (LLResultTypes.FiducialResult tar : tagList) {
-                    if (tar != null && tar.getFiducialId() == 20) {
-                        target = tar;
-                        break;
-                    }
-                }
-            }
-        } else if (Alliance.equals("RED")) {
-            if (tagList != null) {
-                for (LLResultTypes.FiducialResult tar : tagList) {
-                    if (tar != null && tar.getFiducialId() == 24) {
-                        target = tar;
-                        break;
-                    }
-                }
-            }
-        }
+           limelight.pipelineSwitch(1);
 
+        } else if ( Alliance.equals("RED")) {
+            limelight.pipelineSwitch(0);
+        }
         return target;
     }
-
 
     // ======================================================
     // ★★★★★ ADDED NEW FEATURES BELOW ★★★★★

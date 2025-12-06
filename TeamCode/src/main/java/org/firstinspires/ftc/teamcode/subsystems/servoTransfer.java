@@ -18,8 +18,6 @@ public class servoTransfer extends SubsystemBase {
         pitchServo = new ServoEx(hmap, transferConstants.pitchServoID);
         yawServo = new ServoEx(hmap, transferConstants.yawServoID);
 
-        yawServo.setInverted(true);
-
         kickerExtended = false;
 
         this.telemetry = telemetry;
@@ -27,7 +25,7 @@ public class servoTransfer extends SubsystemBase {
 
     public void init() {
         pitchServo.set(0.00);
-        yawServo.set(.50);
+        yawServo.set(0);
     }
 
     public void extendPitch() {
@@ -36,11 +34,11 @@ public class servoTransfer extends SubsystemBase {
     }
 
     public void openGate() {
-        yawServo.set(.50);
+        yawServo.set(0);
     }
 
     public void closeGate() {
-        yawServo.set(0);
+        yawServo.set(0.50);
     }
 
     public void retractPitch() {

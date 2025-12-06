@@ -13,7 +13,7 @@ public class Masquerade extends Robot {
     private Intake intake;
     private Shooter shooter;
     private Turret turret;
-    private servoTransfer kicker;
+    private servoTransfer transfer;
     private GamepadEx driver1;
     private GamepadEx driver2;
     private Telemetry telemetry;
@@ -24,14 +24,14 @@ public class Masquerade extends Robot {
         dt = new Drivetrain(hmap, telemetry);
         intake = new Intake(hmap, telemetry);
         shooter = new Shooter(hmap, telemetry, Alliance);
-        kicker = new servoTransfer(hmap, telemetry);
+        transfer = new servoTransfer(hmap, telemetry);
         turret = Turret.getInstance(hmap, telemetry, Alliance);
         driver1 = new GamepadEx(d1);
         driver2 = new GamepadEx(d2);
         this.Alliance = Alliance.toUpperCase();
         this.telemetry = telemetry;
         timer = new Timer();
-        register(dt, intake, shooter, turret, kicker);
+        register(dt, intake, shooter, turret, transfer);
     }
 
     public void Periodic() {
@@ -47,7 +47,7 @@ public class Masquerade extends Robot {
         shooter.disableFlyWheel();
         turret.stopTracking();
         intake.stopIntake();
-        kicker.init();
+        transfer.init();
         dt.resetHeading();
         dt.follower.setStartingPose(dt.follower.getPose());
     }
@@ -55,9 +55,7 @@ public class Masquerade extends Robot {
     public void start() {
         dt.follower.setMaxPower(0.85);
         dt.follower.startTeleopDrive();
-
-        turret.startLimelight();
-        turret.startTracking();
+        turret.setAngle(-3.321);
     }
 
     public void controlMap() {
@@ -67,16 +65,15 @@ public class Masquerade extends Robot {
             dt.resetHeading();
         }
 
-
-        if(driver1.getButton(GamepadKeys.Button.DPAD_DOWN)) {
-            //Add Wrapping or Zeroing Method
-            turret.stopTracking();
-            turret.stopLimelight();
-        }
-
         if(driver1.getButton(GamepadKeys.Button.DPAD_UP)) {
+            turret.setAngle(-3.32);
             turret.startLimelight();
             turret.startTracking();
+        }
+
+        if(driver1.getButton(GamepadKeys.Button.DPAD_DOWN)) {
+            turret.stopLimelight();
+            turret.stopTracking();
         }
 
         if(driver1.getButton(GamepadKeys.Button.A)) {
@@ -96,7 +93,7 @@ public class Masquerade extends Robot {
         }
 
         else if (driver1.getButton(GamepadKeys.Button.X)) {
-            shooter.setHoodServoPos(0.55);
+            shooter.setHoodServoPos(0.70);
         }
 
         //Driver 2 Controls
@@ -104,19 +101,15 @@ public class Masquerade extends Robot {
         //Shooter Speeds
 
         if (driver2.getButton(GamepadKeys.Button.DPAD_LEFT)) {
-            shooter.shootClose();
+            shooter.setRPM(1300);
         }
 
         if (driver2.getButton(GamepadKeys.Button.DPAD_RIGHT)) {
-            shooter.shootFar();
+            shooter.setRPM(1950);
         }
 
         if (driver2.getButton(GamepadKeys.Button.DPAD_UP)) {
-            shooter.shootMid();
-        }
-
-        if (driver2.getButton(GamepadKeys.Button.DPAD_DOWN)) {
-            shooter.stopMotor();
+            shooter.setRPM(1600);
         }
 
         //Toggle FlyWheel
@@ -131,12 +124,20 @@ public class Masquerade extends Robot {
 
         //Servo Flick
 
-        if (driver2.getButton(GamepadKeys.Button.B)) {
-            kicker.extendPitch();
+        if (driver2.getButton(GamepadKeys.Button.RIGHT_BUMPER)) {
+            transfer.extendPitch();
         }
 
-        if (driver2.getButton(GamepadKeys.Button.A)) {
-            kicker.retractPitch();
+        else if (driver2.getButton(GamepadKeys.Button.LEFT_BUMPER)){
+            transfer.retractPitch();
+        }
+
+        if(driver2.getButton(GamepadKeys.Button.A)) {
+            transfer.closeGate();
+        }
+
+        if (driver2.getButton(GamepadKeys.Button.B)){
+            transfer.openGate();
         }
     }
 }
