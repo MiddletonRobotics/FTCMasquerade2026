@@ -2,6 +2,10 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import static org.firstinspires.ftc.teamcode.constants.ShooterConstants.kf;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -54,6 +58,8 @@ public class Shooter extends SubsystemBase {
     PIDFController motorController;
     SimpleMotorFeedforward FFController;
 
+    FtcDashboard dash;
+
     private Telemetry telemetry;
 
     public Shooter(HardwareMap hmap, Telemetry telemetry, String Alliance) {
@@ -95,7 +101,7 @@ public class Shooter extends SubsystemBase {
 
     @Override
     public void periodic() {
-        currentMotorVelocity = getMotorVelocity();
+        currentMotorVelocity = shooterMotor.getVelocity();
         currentEncoderVelocity = getVelocity();
 
         trackingEnabled = limelight.getLatestResult().isValid();
@@ -140,6 +146,10 @@ public class Shooter extends SubsystemBase {
         return shooterEncoder.getCorrectedVelocity();
     }
 
+    public double getTargetVelocity() {
+        return targetVelocity;
+    }
+
     public double getMotorVelocity() {return shooterMotor.getVelocity();}
 
     public void setMotorVelocity(Double RPM) {
@@ -151,7 +161,11 @@ public class Shooter extends SubsystemBase {
     }
 
     public void setMax() {
-        shooterMotor.set(1);
+        shooterMotor.motor.setPower(1);
+    }
+
+    public double convertTicksToRPM() {
+        return ((getVelocity() * 60) / 28);
     }
 
     public void reverseMotor() {

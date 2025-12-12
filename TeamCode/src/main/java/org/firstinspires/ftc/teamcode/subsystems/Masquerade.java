@@ -7,12 +7,13 @@ import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.constants.ShooterConstants;
 
 public class Masquerade extends Robot {
     public Drivetrain dt;
     private Intake intake;
-    private Shooter shooter;
-    private Turret turret;
+    public Shooter shooter;
+    public Turret turret;
     private servoTransfer transfer;
     private GamepadEx driver1;
     private GamepadEx driver2;
@@ -101,15 +102,15 @@ public class Masquerade extends Robot {
         //Shooter Speeds
 
         if (driver2.getButton(GamepadKeys.Button.DPAD_LEFT)) {
-            shooter.setRPM(1300);
+            shooter.shootClose();
         }
 
         if (driver2.getButton(GamepadKeys.Button.DPAD_RIGHT)) {
-            shooter.setRPM(1950);
+            shooter.setRPM(2800);
         }
 
         if (driver2.getButton(GamepadKeys.Button.DPAD_UP)) {
-            shooter.setRPM(1600);
+            shooter.shootFar();
         }
 
         //Toggle FlyWheel

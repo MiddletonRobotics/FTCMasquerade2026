@@ -38,7 +38,7 @@ public class servoTransfer extends SubsystemBase {
     }
 
     public void closeGate() {
-        yawServo.set(0.50);
+        yawServo.set(0.30);
     }
 
     public void retractPitch() {

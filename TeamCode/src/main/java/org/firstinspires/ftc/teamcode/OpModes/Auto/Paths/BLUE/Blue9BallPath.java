@@ -31,7 +31,7 @@ public class Blue9BallPath {
                     .addPath(
                             new BezierLine(new Pose(19.000, 123.637), new Pose(59.230, 84.328))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(144))
+                    .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(137))
                     .build();
 
             Path2 = follower
@@ -47,7 +47,7 @@ public class Blue9BallPath {
                     .addPath(
                             new BezierLine(new Pose(14.533, 83.887), new Pose(59.230, 84.328))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(144))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(137))
                     .build();
 
             Path4 = follower
@@ -72,7 +72,7 @@ public class Blue9BallPath {
                                     new Pose(59.230, 84.328)
                             )
                     )
-                    .setConstantHeadingInterpolation(Math.toRadians(144))
+                    .setConstantHeadingInterpolation(Math.toRadians(137))
                     .build();
 
             Path6 = follower

@@ -8,125 +8,139 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.constants.TurretConstants;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
-//import org.firstinspires.ftc.teamcode.subsystems.Turret;
-
+import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 
 /**
  * OpMode specifically for PID tuning the turret's AprilTag tracking
  *
  * Features:
- * - Real-time PID tuning via FTC Dashboard (http://192.168.43.1:8080/dash)
+ * - Real-time PID tuning via FTC Dashboard
  * - Displays Limelight data and turret status
  * - Automatically tracks AprilTags when detected
  * - Shows PID error and output values
- *
- * Usage:
- * 1. Connect to Control Hub Wi-Fi
- * 2. Open FTC Dashboard: http://192.168.43.1:8080/dash
- * 3. Run this OpMode
- * 4. Adjust kp, ki, kd, kf values in TurretConstants section
- * 5. Watch telemetry to see turret response
  */
 @TeleOp(group = "Tuning", name = "Turret PID Tuning")
 public class TurretPIDTuningOpMode extends OpMode {
 
     private Turret turret;
+    private Drivetrain drivetrain;
     private FtcDashboard dashboard;
-    private MultipleTelemetry multipleTelemetry;
-    private Telemetry telemetry;
 
     @Override
     public void init() {
         // Initialize FTC Dashboard for PID tuning
         dashboard = FtcDashboard.getInstance();
-        multipleTelemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
-        // Initialize turret subsystem
+        // Attach dashboard telemetry to normal telemetry
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+
+        // Initialize turret
         turret = Turret.getInstance(hardwareMap, telemetry, "BLUE");
 
-        multipleTelemetry.addData("Status", "Initialized");
-        multipleTelemetry.addData("Instructions", "Connect to FTC Dashboard to tune PID values");
-        multipleTelemetry.addData("Dashboard URL", "http://192.168.43.1:8080/dash");
-        multipleTelemetry.update();
+        // Initialize drivetrain
+        drivetrain = new Drivetrain(hardwareMap, telemetry);
+        drivetrain.follower.startTeleopDrive();
+        drivetrain.follower.setMaxPower(0.8);
+
+        telemetry.addLine("Initialized — Ready to Start");
+        telemetry.update();
     }
 
     @Override
     public void start() {
-        // Start Limelight polling
         turret.startLimelight();
-
-        // Start auto-tracking
         turret.startTracking();
 
-        multipleTelemetry.addData("Status", "Started - Turret tracking enabled");
-        multipleTelemetry.update();
+        telemetry.addData("Status", "Started - Turret tracking enabled");
+        telemetry.update();
     }
 
     @Override
     public void loop() {
-        // Update turret subsystem (reads Limelight and applies PID)
+
+        // ---------------------------
+        // UPDATE TURRET
+        // ---------------------------
         turret.periodic();
 
+        // ---------------------------
+        // UPDATE DRIVE
+        // ---------------------------
+        double x = gamepad1.left_stick_x;     // strafe
+        double y = gamepad1.left_stick_y;     // forward/back
+        double turn = gamepad1.right_stick_x; // rotation
 
-        // Display PID Constants (from FTC Dashboard)
-        multipleTelemetry.addLine("=== PID Constants (Tune via Dashboard) ===");
-        multipleTelemetry.addData("Kp", TurretConstants.kp);
-        multipleTelemetry.addData("Ki", TurretConstants.ki);
-        multipleTelemetry.addData("Kd", TurretConstants.kd);
-        multipleTelemetry.addData("Kf", TurretConstants.kf);
-        multipleTelemetry.addLine("");
+        drivetrain.setMovementVectors(x, y, turn, false);
+        drivetrain.periodic();
 
-        // Display AprilTag Detection
-        multipleTelemetry.addLine("=== AprilTag Detection ===");
-        multipleTelemetry.addData("AprilTag Detected", turret.hasTarget() ? "YES" : "NO");
-        multipleTelemetry.addData("TX (degrees)", String.format("%.2f", turret.getTx()));
-        multipleTelemetry.addLine("");
+        // ---------------------------
+        // TELEMETRY
+        // ---------------------------
 
-        // Display Turret Status
-        multipleTelemetry.addLine("=== Turret Status ===");
-        multipleTelemetry.addData("Current Angle", String.format("%.2f°", turret.getCurrentAngle()));
-        multipleTelemetry.addData("Encoder Position", turret.getEncoderPosition());
-        multipleTelemetry.addData("Has Target", turret.hasTarget() ? "YES" : "NO");
-        multipleTelemetry.addData("Tracking State", turret.getSystemState().toString());
-        multipleTelemetry.addLine("");
+        // PID Constants
+        telemetry.addLine("=== PID Constants (Tune via Dashboard) ===");
+        telemetry.addData("Kp", TurretConstants.kp);
+        telemetry.addData("Ki", TurretConstants.ki);
+        telemetry.addData("Kd", TurretConstants.kd);
+        telemetry.addData("Kf", TurretConstants.kf);
+        telemetry.addLine("");
 
-        // Display PID Control Info
-        multipleTelemetry.addLine("=== PID Control ===");
-        multipleTelemetry.addData("Error (TX)", String.format("%.2f°", turret.getTx()));
-        multipleTelemetry.addData("Target Angle", "0° (centered)");
-        multipleTelemetry.addLine("");
+        // AprilTag Detection
+        telemetry.addLine("=== AprilTag Detection ===");
+        telemetry.addData("Detected", turret.hasTarget() ? "YES" : "NO");
+        telemetry.addData("TX (deg)", String.format("%.2f", turret.getTx()));
+        telemetry.addLine("");
 
-        // Display Gamepad Controls
-        multipleTelemetry.addLine("=== Controls ===");
-        multipleTelemetry.addData("A Button", "Start Tracking");
-        multipleTelemetry.addData("B Button", "Stop Tracking");
-        multipleTelemetry.addData("X Button", "Return to Zero");
-        multipleTelemetry.addData("Y Button", "Manual Control (Left Stick X)");
+        // Turret Status
+        telemetry.addLine("=== Turret Status ===");
+        telemetry.addData("Current Angle", String.format("%.2f°", turret.getCurrentAngle()));
+        telemetry.addData("Encoder Position", turret.getEncoderPosition());
+        telemetry.addData("Has Target", turret.hasTarget() ? "YES" : "NO");
+        telemetry.addData("Tracking State", turret.getSystemState().toString());
+        telemetry.addLine("");
 
-        // Gamepad controls
-        if (gamepad1.a) {
+        // PID Tracking Info
+        telemetry.addLine("=== PID Control ===");
+        telemetry.addData("Error (TX)", String.format("%.2f°", turret.getTx()));
+        telemetry.addData("Target Angle", "0° (centered)");
+        telemetry.addLine("");
+
+        // Drive Info
+        telemetry.addLine("=== Drive Control ===");
+        telemetry.addData("Drive X", x);
+        telemetry.addData("Drive Y", y);
+        telemetry.addData("Turn", turn);
+        telemetry.addLine("");
+
+        // Gamepad Controls
+        telemetry.addLine("=== Controls ===");
+        telemetry.addData("A", "Start Tracking");
+        telemetry.addData("B", "Stop Tracking");
+        telemetry.addData("X", "Return to Zero");
+        telemetry.addData("Y", "Manual Control (Left Stick X)");
+
+        // ---------------------------
+        // GAMEPAD TURRRET CONTROLS
+        // ---------------------------
+        if (gamepad1.a) turret.startTracking();
+        if (gamepad1.b) turret.stopTracking();
+        if (gamepad1.x) turret.forceReturnToZero();
+        if (gamepad1.y) turret.setManualPowerControl(gamepad1.left_stick_x * 0.5);
+
+        if (gamepad1.dpad_left) {
+            turret.stopTracking();
+            turret.setAngle(-3.35);
             turret.startTracking();
         }
-        if (gamepad1.b) {
-            turret.stopTracking();
-        }
-        if (gamepad1.x) {
-            turret.forceReturnToZero();
-        }
-        if (gamepad1.y) {
-            turret.setManualPowerControl(gamepad1.left_stick_x * 0.5);
-        }
 
-        multipleTelemetry.update();
+        telemetry.update();
     }
 
     @Override
     public void stop() {
-        // Stop Limelight polling
         turret.stopLimelight();
 
-        multipleTelemetry.addData("Status", "Stopped");
-        multipleTelemetry.update();
+        telemetry.addData("Status", "Stopped");
+        telemetry.update();
     }
 }
-

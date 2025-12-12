@@ -98,6 +98,8 @@ public class Turret extends SubsystemBase {
 
         this.Alliance = Alliance.toUpperCase();
 
+        tagGet();
+
         tagList=limelight.getLatestResult().getFiducialResults();
     }
 
@@ -303,6 +305,15 @@ public class Turret extends SubsystemBase {
             limelight.pipelineSwitch(0);
         }
         return target;
+    }
+
+    public void tagGet() {
+        if (Alliance.equals("BLUE")) {
+            limelight.pipelineSwitch(1);
+
+        } else if ( Alliance.equals("RED")) {
+            limelight.pipelineSwitch(0);
+        }
     }
 
     // ======================================================

@@ -16,10 +16,10 @@ public class RedSide6BallPath {
             Path1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(125.000, 123.637), new Pose(84.669, 83.882))
+                            new BezierLine(new Pose(125.000, 123.637), new Pose(84.669, 83.882)) //87.187, 86.557 //84.669, 83.882 Old
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(39), Math.toRadians(39
-                    ))
+                    .setLinearHeadingInterpolation(Math.toRadians(39), Math.toRadians(39)
+                    )
                     .build();
 
             Path2 = follower
