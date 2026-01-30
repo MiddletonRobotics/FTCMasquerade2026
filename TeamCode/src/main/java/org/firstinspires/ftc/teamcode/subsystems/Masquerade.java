@@ -7,39 +7,61 @@ import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.constants.ShooterConstants;
 
 public class Masquerade extends Robot {
     public Drivetrain dt;
     private Intake intake;
     public Shooter shooter;
     public Turret turret;
-    private servoTransfer transfer;
+    public servoTilt endGame;
+    public servoTransfer transfer;
     private GamepadEx driver1;
     private GamepadEx driver2;
     private Telemetry telemetry;
     private Timer timer;
     private String Alliance;
 
+    // Transfer state machine
+    // -1 = idle
+    //  1 = open gate + wait
+    //  2 = feed intake for a bit
+    //  3 = flick (extend pitch)
+    //  4 = finish (retract/close/stop) then idle
+    private int transferState = -1;
+
+    // prevents "holding Y" from constantly restarting the state machine
+    private boolean rapidRequested = false;
+
     public Masquerade(HardwareMap hmap, Telemetry telemetry, Gamepad d1, Gamepad d2, String Alliance) {
         dt = new Drivetrain(hmap, telemetry);
         intake = new Intake(hmap, telemetry);
         shooter = new Shooter(hmap, telemetry, Alliance);
         transfer = new servoTransfer(hmap, telemetry);
-        turret = Turret.getInstance(hmap, telemetry, Alliance);
+        turret = new Turret(hmap, telemetry, Alliance);
+        endGame = new servoTilt(hmap, telemetry);
+
         driver1 = new GamepadEx(d1);
         driver2 = new GamepadEx(d2);
+
         this.Alliance = Alliance.toUpperCase();
         this.telemetry = telemetry;
+
         timer = new Timer();
         register(dt, intake, shooter, turret, transfer);
+
+        setState(-1);
     }
 
     public void Periodic() {
         dt.periodic();
         intake.periodic();
+        transfer.periodic();
         shooter.periodic();
         turret.periodic();
+
+        // run transfer state machine every loop
+        rapidFire();
+
         telemetry.update();
     }
 
@@ -51,10 +73,12 @@ public class Masquerade extends Robot {
         transfer.init();
         dt.resetHeading();
         dt.follower.setStartingPose(dt.follower.getPose());
+
+        //resetRapid();
     }
 
     public void start() {
-        dt.follower.setMaxPower(0.85);
+        dt.follower.setMaxPower(0.9);
         dt.follower.startTeleopDrive();
         turret.setAngle(-3.321);
     }
@@ -62,83 +86,153 @@ public class Masquerade extends Robot {
     public void controlMap() {
         dt.setMovementVectors(driver1.getLeftX(), driver1.getLeftY(), driver1.getRightX(), false);
 
-        if(driver1.getButton(GamepadKeys.Button.TOUCHPAD)) {
+        if (driver1.getButton(GamepadKeys.Button.TOUCHPAD)) {
             dt.resetHeading();
         }
 
-        if(driver1.getButton(GamepadKeys.Button.DPAD_UP)) {
-            turret.setAngle(-3.32);
-            turret.startLimelight();
-            turret.startTracking();
-        }
-
-        if(driver1.getButton(GamepadKeys.Button.DPAD_DOWN)) {
-            turret.stopLimelight();
-            turret.stopTracking();
-        }
-
-        if(driver1.getButton(GamepadKeys.Button.A)) {
+        // ----------------------
+        // Driver 1: Intake manual
+        // ----------------------
+        if (driver1.getButton(GamepadKeys.Button.A)) {
             intake.intake();
+        } else if (driver1.getButton(GamepadKeys.Button.B)) {
+            intake.outtake();
+        } else {
+            // don't fight the state machine
+            if (transferState == -1) {
+                intake.stopIntake();
+            }
         }
 
-        else if(driver1.getButton(GamepadKeys.Button.B)) {
-            intake.outtake();
+        if(driver1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0) {
+            endGame.setServoSpeed(1);
+        }
+
+        else if (driver1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0) {
+            endGame.setServoSpeed(-1);
         }
 
         else {
-            intake.stopIntake();
+            endGame.stopServo();
         }
 
-        if(driver1.getButton(GamepadKeys.Button.Y)) {
+        // Hood presets
+        if (driver1.getButton(GamepadKeys.Button.DPAD_LEFT)) {
             shooter.setHoodServoPos(0.0);
+        } else if (driver1.getButton(GamepadKeys.Button.DPAD_UP)) {
+            shooter.setHoodServoPos(0.47);
         }
 
-        else if (driver1.getButton(GamepadKeys.Button.X)) {
-            shooter.setHoodServoPos(0.70);
+        boolean yNow = driver1.getButton(GamepadKeys.Button.Y);
+        if (yNow && !rapidRequested && transferState == -1) {
+            startTransfer();
+        }
+        rapidRequested = yNow;
+
+        if (driver1.getButton(GamepadKeys.Button.X)) {
+            resetRapid();
         }
 
-        //Driver 2 Controls
-
-        //Shooter Speeds
-
+        // ----------------------
+        // Driver 2: Shooter speed + flywheel
+        // ----------------------
         if (driver2.getButton(GamepadKeys.Button.DPAD_LEFT)) {
             shooter.shootClose();
         }
-
         if (driver2.getButton(GamepadKeys.Button.DPAD_RIGHT)) {
-            shooter.setRPM(2800);
-        }
-
-        if (driver2.getButton(GamepadKeys.Button.DPAD_UP)) {
             shooter.shootFar();
         }
-
-        //Toggle FlyWheel
-
-        if (driver2.getButton(GamepadKeys.Button.Y)) {
-            shooter.disableFlyWheel();
+        if (driver2.getButton(GamepadKeys.Button.DPAD_UP)) {
+            shooter.shootMid();
         }
 
         if (driver2.getButton(GamepadKeys.Button.X)) {
             shooter.enableFlyWheel();
         }
 
-        //Servo Flick
+        // ----------------------
+        // Driver 2: Transfer manual controls (ONLY when idle)
+        // ----------------------
+        if (transferState == -1) {
+            // Manual flick: only command extend when trigger pressed;
+            // don't constantly retract every loop unless you want that behavior.
+            if (driver2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0) {
+                transfer.extendPitch();
+            }
 
-        if (driver2.getButton(GamepadKeys.Button.RIGHT_BUMPER)) {
-            transfer.extendPitch();
+            if(driver2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0){
+                transfer.retractPitch();
+            }
+
+            if (driver2.getButton(GamepadKeys.Button.A)) {
+                transfer.closeGate();
+            }
+            if (driver2.getButton(GamepadKeys.Button.B)) {
+                transfer.openGate();
+            }
         }
+    }
 
-        else if (driver2.getButton(GamepadKeys.Button.LEFT_BUMPER)){
-            transfer.retractPitch();
-        }
+    private void setState(int x) {
+        transferState = x;
+        timer.resetTimer();
+    }
 
-        if(driver2.getButton(GamepadKeys.Button.A)) {
-            transfer.closeGate();
-        }
+    private void startTransfer() {
+        // start from a known safe state
+        transfer.retractPitch();
+        transfer.openGate();
+        intake.stopIntake();
+        setState(1);
+    }
 
-        if (driver2.getButton(GamepadKeys.Button.B)){
-            transfer.openGate();
+    public void resetRapid() {
+        intake.stopIntake();
+        transfer.retractPitch();
+        transfer.closeGate();
+        setState(-1);
+    }
+
+    public void rapidFire() {
+        switch (transferState) {
+
+            case 1:
+                // Ensure gate is open, then wait before feeding
+                transfer.openGate();
+                if (timer.getElapsedTimeSeconds() > 0.25) {
+                    setState(2);
+                }
+                break;
+
+            case 2:
+                intake.intake();
+                if (timer.getElapsedTimeSeconds() > 0.75) {
+                    setState(3);
+                }
+                break;
+
+            case 3:
+                // Flick shot
+                transfer.extendPitch();
+                if (timer.getElapsedTimeSeconds() > 1) {
+                    setState(4);
+                }
+                break;
+
+            case 4:
+                // Reset mechanisms and finish
+                transfer.retractPitch();
+                transfer.closeGate();
+                intake.stopIntake();
+
+                // Done (single shot). If you want continuous rapid-fire,
+                // change this to setState(2) or setState(1).
+                setState(-1);
+                break;
+
+            default:
+                // idle
+                break;
         }
     }
 }

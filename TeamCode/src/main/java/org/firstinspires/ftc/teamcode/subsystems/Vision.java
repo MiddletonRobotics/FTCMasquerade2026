@@ -104,6 +104,25 @@ public class Vision extends SubsystemBase
         return 0;
     }
 
+    public double getTy() {
+        LLResult result = cam.getLatestResult();
+        tagList = result.getFiducialResults();
+
+        LLResultTypes.FiducialResult tag = getTag();
+        return (tag != null) ? tag.getTargetYDegrees() : 0.0;
+    }
+
+
+    public boolean hasTarget() {
+        LLResult result = cam.getLatestResult();
+        tagList = result.getFiducialResults();
+
+        return (tagList.isEmpty()) ? false : true;
+    }
+
+
+
+
     public boolean targetPresent()
     {
         return getTag()!=null;

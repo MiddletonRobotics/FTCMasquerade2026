@@ -67,6 +67,9 @@ public class Turret extends SubsystemBase {
     private static final double TURRET_CPR = MOTOR_CPR * GEAR_RATIO;
     private static final double COUNTS_PER_DEGREE = TURRET_CPR / 360.0;
 
+    // ★ NEW CONSTANT FOR LIMITS
+    private static final double MAX_ANGLE = 50.0;
+
     public static synchronized Turret getInstance(HardwareMap hMap, Telemetry telemetry, String Alliance) {
         if(instance == null) {
             instance = new Turret(hMap, telemetry, Alliance);
@@ -83,6 +86,8 @@ public class Turret extends SubsystemBase {
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        // Assuming leftHomingSwitch is either unused or declared elsewhere if a sensor is present
 
         limelight = hMap.get(Limelight3A.class, "limelight");
 
@@ -105,7 +110,7 @@ public class Turret extends SubsystemBase {
 
     public void startLimelight() {
         limelight.start();
-        limelight.setPollRateHz(50);
+        limelight.setPollRateHz(25);
     }
 
     public void stopLimelight() {
@@ -134,7 +139,7 @@ public class Turret extends SubsystemBase {
 
         telemetry.addData(("Has Target: "), hasTarget);
 
-        /** ★ ADD: telemetry for angles */
+/** ★ ADD: telemetry for angles */
         telemetry.addData("Turret Angle", getAngle());
         telemetry.addData("Target Angle", targetAngle);
         telemetry.addData("Wrapped Target", wrapAngle(targetAngle));
@@ -202,7 +207,7 @@ public class Turret extends SubsystemBase {
             case HOME:
             case FINDING_POSITION:
             case RELOCALIZING:
-                /** ★ ADD: FINDING_POSITION uses goToSetpoint() instead of relocalize */
+/** ★ ADD: FINDING_POSITION uses goToSetpoint() instead of relocalize */
                 if (systemState == SystemState.FINDING_POSITION) {
                     goToSetpoint();
                 } else {
@@ -293,13 +298,13 @@ public class Turret extends SubsystemBase {
     }
 
     public LLResultTypes.FiducialResult getTag() {
-        // Get the latest tag list every time this method is called
+// Get the latest tag list every time this method is called
         tagList = limelight.getLatestResult().getFiducialResults();
 
         LLResultTypes.FiducialResult target = null;
 
         if (Alliance.equals("BLUE")) {
-           limelight.pipelineSwitch(1);
+            limelight.pipelineSwitch(1);
 
         } else if ( Alliance.equals("RED")) {
             limelight.pipelineSwitch(0);
@@ -316,14 +321,14 @@ public class Turret extends SubsystemBase {
         }
     }
 
-    // ======================================================
-    // ★★★★★ ADDED NEW FEATURES BELOW ★★★★★
-    // ======================================================
+// ======================================================
+// ★★★★★ ADDED NEW FEATURES BELOW ★★★★★
+// ======================================================
 
-    /** ★ Add: wrapAngle */
+    /** ★ Modified: wrapAngle to use 50 degree limit */
     private double wrapAngle(double angle) {
-        if (angle > 90) return 90;
-        if (angle < -90) return -90;
+        if (angle > MAX_ANGLE) return MAX_ANGLE;
+        if (angle < -MAX_ANGLE) return -MAX_ANGLE;
         return angle;
     }
 
@@ -340,6 +345,7 @@ public class Turret extends SubsystemBase {
         double clampedTarget = wrapAngle(targetAngle);
 
         double power = positionController.calculate(currentAngle, clampedTarget);
+
         power = Math.max(-1, Math.min(1, power));
 
         turretMotor.setPower(power);

@@ -29,7 +29,7 @@ public class Blue9BallPath {
             Path1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(19.000, 123.637), new Pose(59.230, 84.328))
+                            new BezierLine(new Pose(20.15, 122.56), new Pose(59.230, 84.328))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(144), Math.toRadians(137))
                     .build();
@@ -37,7 +37,7 @@ public class Blue9BallPath {
             Path2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(59.230, 84.328), new Pose(14.533, 83.887))
+                            new BezierLine(new Pose(59.230, 84.328), new Pose(19.233, 84.687)) //83.887 //20.33
                     )
                     .setConstantHeadingInterpolation(Math.toRadians(180))
                     .build();
@@ -45,7 +45,7 @@ public class Blue9BallPath {
             Path3 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(14.533, 83.887), new Pose(59.230, 84.328))
+                            new BezierLine(new Pose(19.533, 84.687), new Pose(59.230, 84.328))
                     )
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(137))
                     .build();
@@ -57,7 +57,7 @@ public class Blue9BallPath {
                                     new Pose(59.230, 84.328),
                                     new Pose(62.312, 55.043),
                                     new Pose(30.606, 60.548),
-                                    new Pose(9.689, 60.108)
+                                    new Pose(18.689, 59.792)
                             )
                     )
                     .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -67,7 +67,7 @@ public class Blue9BallPath {
                     .pathBuilder()
                     .addPath(
                             new BezierCurve(
-                                    new Pose(9.689, 60.108),
+                                    new Pose(18.689, 59.792),
                                     new Pose(62.312, 55.043),
                                     new Pose(59.230, 84.328)
                             )

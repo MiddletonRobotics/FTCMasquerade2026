@@ -16,7 +16,7 @@ import com.pedropathing.paths.PathChain;
 
 import org.firstinspires.ftc.teamcode.pedropathing.Constants;
 
-public class Red9BallPath {
+public class Red12BallPath {
 
     public PathChain Path1;
     public PathChain Path2;
@@ -24,8 +24,10 @@ public class Red9BallPath {
     public PathChain Path4;
     public PathChain Path5;
     public PathChain Path6;
+    public PathChain Path7;
+    public PathChain Path8;
 
-    public Red9BallPath(Follower follower) {
+    public  Red12BallPath (Follower follower) {
         Path1 = follower
                 .pathBuilder()
                 .addPath(
@@ -37,7 +39,7 @@ public class Red9BallPath {
         Path2 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(59.230, 84.328).mirror(), new Pose(19.233, 84.687).mirror()) //83.887 //20.33
+                        new BezierLine(new Pose(59.230, 84.328).mirror(), new Pose(19.533, 85.687).mirror())
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
@@ -45,7 +47,7 @@ public class Red9BallPath {
         Path3 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(19.533, 84.687).mirror(), new Pose(59.230, 84.328).mirror())
+                        new BezierLine(new Pose(19.533, 85.687).mirror(), new Pose(59.230, 84.328).mirror())
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(44))
                 .build();
@@ -57,7 +59,7 @@ public class Red9BallPath {
                                 new Pose(59.230, 84.328).mirror(),
                                 new Pose(62.312, 55.043).mirror(),
                                 new Pose(30.606, 60.548).mirror(),
-                                new Pose(18.689, 59.792).mirror()
+                                new Pose(20.689, 60.208).mirror()
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -67,7 +69,7 @@ public class Red9BallPath {
                 .pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(18.689, 59.792).mirror(),
+                                new Pose(20.689, 60.208).mirror(),
                                 new Pose(62.312, 55.043).mirror(),
                                 new Pose(59.230, 84.328).mirror()
                         )
@@ -78,7 +80,32 @@ public class Red9BallPath {
         Path6 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(59.230, 84.328).mirror(), new Pose(49.542, 74.199).mirror())
+                        new BezierCurve(
+                                new Pose(59.230, 84.328).mirror(),
+                                new Pose(55.711, 25.338).mirror(),
+                                new Pose(33.364, 37.298).mirror(),
+                                new Pose(15.229, 35.667).mirror()
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+
+        Path7 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(15.229, 35.667).mirror(),
+                                new Pose(59.174, 31.948).mirror(),
+                                new Pose(59.230, 84.328).mirror()
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(44))
+                .build();
+
+        Path8 = follower
+                .pathBuilder()
+                .addPath(
+                        new BezierLine(new Pose(59.230, 84.328).mirror(), new Pose(52.249, 76.170).mirror())
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(44))
                 .build();

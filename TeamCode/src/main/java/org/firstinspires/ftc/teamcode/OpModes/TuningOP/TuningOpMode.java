@@ -110,7 +110,7 @@ public class TuningOpMode extends OpMode {
         }
 
         if(Driver1.getButton(GamepadKeys.Button.DPAD_RIGHT)) {
-            shooterMotor.setPower(1);
+            shooterMotor.setPower(-1);
         }
 
         else if (Driver1.getButton(GamepadKeys.Button.DPAD_LEFT)) {
@@ -118,7 +118,7 @@ public class TuningOpMode extends OpMode {
         }
 
         else if (Driver1.getButton(GamepadKeys.Button.DPAD_DOWN)) {
-            shooterMotor.setPower(0.75);
+            shooterMotor.setPower(-0.75);
         }
 
 

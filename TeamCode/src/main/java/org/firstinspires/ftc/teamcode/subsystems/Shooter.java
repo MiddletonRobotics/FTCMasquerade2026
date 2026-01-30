@@ -66,7 +66,7 @@ public class Shooter extends SubsystemBase {
         shooterMotor = new MotorEx(hmap, shooterMotorID, Motor.GoBILDA.BARE);
         shooterMotor.setRunMode(Motor.RunMode.RawPower);
         shooterMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        shooterMotor.motor.setDirection(DcMotorSimple.Direction.FORWARD);
+        shooterMotor.motor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         shooterEncoder = shooterMotor.encoder;
 
@@ -138,8 +138,6 @@ public class Shooter extends SubsystemBase {
         } else {
             telemetry.addData("Detected Tag ID", "None");
         }
-
-        telemetry.update();
     }
 
     public double getVelocity() {
@@ -182,7 +180,7 @@ public class Shooter extends SubsystemBase {
 
     public void enableFlyWheel() {
         flyWheelEnabled = true;
-        targetVelocity = 100;
+        targetVelocity = 600;
     }
 
     public void setShooterVelocity() {
@@ -298,7 +296,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void idleRPM() {
-        targetVelocity = 200;
+        targetVelocity = 250;
     }
 
     public void setRPM(double RPM) {

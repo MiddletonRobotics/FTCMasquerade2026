@@ -45,7 +45,7 @@ public class newRed6Ball extends CommandOpMode {
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
-        follower.setStartingPose(new Pose(125, 123.627, Math.toRadians(39)));
+        follower.setStartingPose(new Pose(124.250, 122.25, Math.toRadians(39)));
         follower.update();
 
         register(drivetrain, intake, transfer, shooter, turret);
