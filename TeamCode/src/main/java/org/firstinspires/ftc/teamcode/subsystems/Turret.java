@@ -30,7 +30,7 @@ public class Turret extends SubsystemBase {
     private PIDFController pidfController;
     private SimpleMotorFeedforward ffController;
 
-    private Telemetry telemetry;
+    private final Telemetry telemetry;
 
     public Turret(HardwareMap hMap, Telemetry telemetry) {
         turretMotor = hMap.get(DcMotorEx.class, TurretConstants.turretMotorID);
@@ -42,6 +42,8 @@ public class Turret extends SubsystemBase {
 
         pidfController = new PIDFController(TurretConstants.kP, TurretConstants.kI, TurretConstants.kD, TurretConstants.kF);
         ffController = new SimpleMotorFeedforward(TurretConstants.kS, TurretConstants.kV, TurretConstants.kA);
+
+        this.telemetry = telemetry;
     }
 
     @Override
