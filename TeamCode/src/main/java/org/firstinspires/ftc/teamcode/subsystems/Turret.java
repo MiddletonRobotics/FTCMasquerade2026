@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -15,344 +16,96 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.controller.PIDFController;
 import com.seattlesolvers.solverslib.controller.wpilibcontroller.SimpleMotorFeedforward;
 
+import org.firstinspires.ftc.library.geometry.Pose2d;
+import org.firstinspires.ftc.library.geometry.Units;
+import org.firstinspires.ftc.library.math.MathUtility;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.constants.GlobalConstants;
 import org.firstinspires.ftc.teamcode.constants.TurretConstants;
 
 public class Turret extends SubsystemBase {
     private DcMotorEx turretMotor;
-    private DigitalChannel leftHomingSwitch;
-    private Limelight3A limelight;
 
-    private List<LLResultTypes.FiducialResult> tagList;
-
-    public enum SystemState {
-        IDLE,
-        HOME,
-        FINDING_POSITION,
-        RELOCALIZING,
-        TARGET_POSITION,
-        MANUAL
-    }
-
-    public enum WantedState {
-        IDLE,
-        HOME,
-        FINDING_POSITION,
-        RELOCALIZING,
-        TARGET_POSITION,
-        MANUAL
-    }
-
-    private PIDFController positionController;
-    private SimpleMotorFeedforward frictionController;
-
-    private WantedState wantedState = WantedState.IDLE;
-    private SystemState systemState = SystemState.IDLE;
-
-    private String Alliance;
-
-    public static Turret instance;
+    private PIDFController pidfController;
+    private SimpleMotorFeedforward ffController;
 
     private Telemetry telemetry;
 
-    private double tx;
-    private boolean hasTarget;
-
-    /** ★ ADD: targetAngle field */
-    private double targetAngle = 0;
-
-    // Encoder constants
-    private static final double MOTOR_CPR = 537.7;
-    private static final double GEAR_RATIO = 174.0 / 36.0;
-    private static final double TURRET_CPR = MOTOR_CPR * GEAR_RATIO;
-    private static final double COUNTS_PER_DEGREE = TURRET_CPR / 360.0;
-
-    // ★ NEW CONSTANT FOR LIMITS
-    private static final double MAX_ANGLE = 50.0;
-
-    public static synchronized Turret getInstance(HardwareMap hMap, Telemetry telemetry, String Alliance) {
-        if(instance == null) {
-            instance = new Turret(hMap, telemetry, Alliance);
-        }
-        return instance;
-    }
-
-    public Turret(HardwareMap hMap, Telemetry telemetry, String Alliance) {
+    public Turret(HardwareMap hMap, Telemetry telemetry) {
         turretMotor = hMap.get(DcMotorEx.class, TurretConstants.turretMotorID);
         turretMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-
-        // Assuming leftHomingSwitch is either unused or declared elsewhere if a sensor is present
-
-        limelight = hMap.get(Limelight3A.class, "limelight");
-
-        positionController = new PIDFController(
-                TurretConstants.kp,
-                TurretConstants.ki,
-                TurretConstants.kd,
-                TurretConstants.kf
-        );
-        frictionController = new SimpleMotorFeedforward(0, 0, 0);
-
-        this.telemetry = telemetry;
-
-        this.Alliance = Alliance.toUpperCase();
-
-        tagGet();
-
-        tagList=limelight.getLatestResult().getFiducialResults();
-    }
-
-    public void startLimelight() {
-        limelight.start();
-        limelight.setPollRateHz(25);
-    }
-
-    public void stopLimelight() {
-        limelight.stop();
-    }
-
-    public void initPos() {
-
+        pidfController = new PIDFController(TurretConstants.kP, TurretConstants.kI, TurretConstants.kD, TurretConstants.kF);
+        ffController = new SimpleMotorFeedforward(TurretConstants.kS, TurretConstants.kV, TurretConstants.kA);
     }
 
     @Override
     public void periodic() {
-        positionController.setPIDF(
-                TurretConstants.kp,
-                TurretConstants.ki,
-                TurretConstants.kd,
-                TurretConstants.kf
-        );
-
-        updateLimelightData();
-
-        systemState = handleTransition();
-        applyStates();
-
-        LLResultTypes.FiducialResult currentTag = getTag();
-
-        telemetry.addData(("Has Target: "), hasTarget);
-
-/** ★ ADD: telemetry for angles */
-        telemetry.addData("Turret Angle", getAngle());
-        telemetry.addData("Target Angle", targetAngle);
-        telemetry.addData("Wrapped Target", wrapAngle(targetAngle));
-        telemetry.addData("Encoder Position", turretMotor.getCurrentPosition());
-        telemetry.addData("tx", tx);
-        telemetry.addData("Wanted State", wantedState);
-        telemetry.addData("System State", systemState);
-
-        if (currentTag != null) {
-            telemetry.addData("Detected Tag ID", currentTag.getFiducialId());
-        } else {
-            telemetry.addData("Detected Tag ID", "None");
-        }
+        telemetry.addData("Turret Current Open Loop", turretMotor.getPower());
+        telemetry.addData("Turret Current Position", getCurrentPosition());
     }
 
-    private void updateLimelightData() {
-        LLResult result = limelight.getLatestResult();
-        if (result != null && result.isValid()) {
-            List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
-
-            if (!fiducialResults.isEmpty()) {
-                tx = result.getTx();
-                hasTarget = true;
-            } else {
-                tx = result.getTx();
-                hasTarget = (Math.abs(tx) > 0.1);
-            }
-        } else {
-            tx = 0;
-            hasTarget = false;
-        }
-    }
-
-    private SystemState handleTransition() {
-        double angle = getAngle();
-
-        if (angle > 360 && systemState != SystemState.RELOCALIZING) {
-            return SystemState.RELOCALIZING;
-        }
-
-        switch(wantedState) {
-            case IDLE:
-                return SystemState.IDLE;
-            case HOME:
-                return SystemState.HOME;
-            case FINDING_POSITION:
-                return SystemState.FINDING_POSITION;
-            case RELOCALIZING:
-                return SystemState.RELOCALIZING;
-            case TARGET_POSITION:
-                return SystemState.TARGET_POSITION;
-            case MANUAL:
-                return SystemState.MANUAL;
-        }
-
-        return systemState;
-    }
-
-    public void applyStates() {
-        switch(systemState) {
-            case IDLE:
-                turretMotor.setPower(0);
-                break;
-
-            case HOME:
-            case FINDING_POSITION:
-            case RELOCALIZING:
-/** ★ ADD: FINDING_POSITION uses goToSetpoint() instead of relocalize */
-                if (systemState == SystemState.FINDING_POSITION) {
-                    goToSetpoint();
-                } else {
-                    relocalize();
-                }
-                break;
-
-            case TARGET_POSITION:
-                if (hasTarget) {
-                    aimWithVision();
-                } else {
-                    turretMotor.setPower(0);
-                }
-                break;
-
-            case MANUAL:
-                break;
-        }
-    }
-
-    private void aimWithVision() {
-        double error = tx;
-        double power = -positionController.calculate(0, error);
-
-        power = Math.max(-1.0, Math.min(1.0, power));
-
-        turretMotor.setPower(power);
-    }
-
-    public void relocalize() {
-        double currentAngle = getAngle();
-        double target = 0;
-
-        double power = -positionController.calculate(currentAngle, target);
-        turretMotor.setPower(power);
-
-        if (Math.abs(currentAngle - 0) < 2.0) {
-            turretMotor.setPower(0);
-            wantedState = WantedState.TARGET_POSITION;
-        }
-    }
-
-    public void setManualPowerControl(double power) {
-        wantedState = WantedState.MANUAL;
-        turretMotor.setPower(power);
-    }
-
-    public void setLimelightData(double tx, boolean hasTarget) {
-        this.tx = tx;
-        this.hasTarget = hasTarget;
-    }
-
-    public void startTracking() {
-        wantedState = WantedState.TARGET_POSITION;
-    }
-
-    public void stopTracking() {
-        wantedState = WantedState.IDLE;
-    }
-
-    public void forceReturnToZero() {
-        wantedState = WantedState.RELOCALIZING;
-    }
-
-    private double getAngle() {
-        int encoderCounts = turretMotor.getCurrentPosition();
-        return encoderCounts / COUNTS_PER_DEGREE;
-    }
-
-    public int getEncoderPosition() {
-        return turretMotor.getCurrentPosition();
-    }
-
-    public double getCurrentAngle() {
-        return getAngle();
-    }
-
-    public SystemState getSystemState() {
-        return systemState;
-    }
-
-    public double getTx() {
-        return tx;
-    }
-
-    public boolean hasTarget() {
-        return hasTarget;
-    }
-
-    public LLResultTypes.FiducialResult getTag() {
-// Get the latest tag list every time this method is called
-        tagList = limelight.getLatestResult().getFiducialResults();
-
-        LLResultTypes.FiducialResult target = null;
-
-        if (Alliance.equals("BLUE")) {
-            limelight.pipelineSwitch(1);
-
-        } else if ( Alliance.equals("RED")) {
-            limelight.pipelineSwitch(0);
-        }
-        return target;
-    }
-
-    public void tagGet() {
-        if (Alliance.equals("BLUE")) {
-            limelight.pipelineSwitch(1);
-
-        } else if ( Alliance.equals("RED")) {
-            limelight.pipelineSwitch(0);
-        }
-    }
-
-// ======================================================
-// ★★★★★ ADDED NEW FEATURES BELOW ★★★★★
-// ======================================================
-
-    /** ★ Modified: wrapAngle to use 50 degree limit */
-    private double wrapAngle(double angle) {
-        if (angle > MAX_ANGLE) return MAX_ANGLE;
-        if (angle < -MAX_ANGLE) return -MAX_ANGLE;
+    public static double normalizeAngle(double angle) {
+        angle %= 360;
+        if (angle > 180) angle -= 360;
+        if (angle < -180) angle += 360;
         return angle;
     }
 
-    /** ★ Add: setAngle */
-    public void setAngle(double angleDegrees) {
-        angleDegrees = wrapAngle(angleDegrees);
-        this.targetAngle = angleDegrees;
-        this.wantedState = WantedState.FINDING_POSITION;
+    public double getCurrentPosition() {
+        return Math.toRadians(normalizeAngle(((turretMotor.getCurrentPosition() / 537.7) / TurretConstants.kTurretRatio) * 360));
     }
 
-    /** ★ Add: goToSetpoint */
-    private void goToSetpoint() {
-        double currentAngle = getAngle();
-        double clampedTarget = wrapAngle(targetAngle);
+    public double getCurrentVelocity() {
+        return Math.toRadians(normalizeAngle(((turretMotor.getVelocity() / 537.7) / TurretConstants.kTurretRatio) * 360));
+    }
 
-        double power = positionController.calculate(currentAngle, clampedTarget);
+    public void setManualPower(double speed) {
+        telemetry.addData("Turret Setpoint Open Loop", speed);
+        turretMotor.setPower(speed);
+    }
 
-        power = Math.max(-1, Math.min(1, power));
+    public void resetPosition() {
+        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
 
-        turretMotor.setPower(power);
+    public void setPosition(double radians) {
+        telemetry.addData("Turret Setpoint Position", radians);
+        telemetry.addData("Turret Primary Position Error", pidfController.getPositionError());
+        telemetry.addData("Turret Primary At Setpoint?", pidfController.atSetPoint());
 
-        if (Math.abs(clampedTarget - currentAngle) < 1.5) {
-            turretMotor.setPower(0);
-            wantedState = WantedState.IDLE;
+        if(GlobalConstants.kTuningMode) {
+            pidfController.setPIDF(TurretConstants.kP, TurretConstants.kI, TurretConstants.kD, TurretConstants.kF);
         }
+
+        pidfController.setSetPoint(radians);
+        turretMotor.setPower(MathUtility.clamp(pidfController.calculate(getCurrentPosition(), radians), -0.65, 0.45) + ffController.calculate(Math.toDegrees(200)));
+    }
+
+    public double computeAngle(Pose2d robotPose, Pose targetPose, double turretOffsetX, double turretOffsetY) {
+        double robotX = robotPose.getX();
+        double robotY = robotPose.getY();
+        double robotHeading = robotPose.getRotation().getRadians();
+
+        double turretX = robotX + turretOffsetX * Math.cos(robotHeading) - turretOffsetY * Math.sin(robotHeading);
+        double turretY = robotY + turretOffsetX * Math.sin(robotHeading) + turretOffsetY * Math.cos(robotHeading);
+
+        double dx = targetPose.getX() - turretX;
+        double dy = targetPose.getY() - turretY;
+
+        double targetAngleGlobal = Math.atan2(dy, dx);
+        double desiredTurretAngle = targetAngleGlobal - robotHeading;
+        double normalizedAngle = AngleUnit.normalizeRadians(desiredTurretAngle);
+        return MathUtility.clamp(normalizedAngle, -((37 * Math.PI) / 64), ((3 * Math.PI) / 4));
+    }
+
+    public Pose getTargetPose(GlobalConstants.AllianceColor allianceColor) {
+        return allianceColor == GlobalConstants.AllianceColor.BLUE ? new Pose(144, 0, Units.degreesToRadians(135)) : new Pose(144, 144, Units.degreesToRadians(45));
     }
 }
