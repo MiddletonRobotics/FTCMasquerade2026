@@ -12,4 +12,5 @@ public class GlobalConstants {
 
     public static OpModeType opModeType;
     public static AllianceColor allianceColor = AllianceColor.BLUE;
+    public static boolean kTuningMode = false;
 }
