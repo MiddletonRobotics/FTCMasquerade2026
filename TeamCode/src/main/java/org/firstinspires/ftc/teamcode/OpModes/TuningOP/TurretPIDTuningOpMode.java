@@ -35,7 +35,7 @@ public class TurretPIDTuningOpMode extends OpMode {
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         // Initialize turret
-        turret = Turret.getInstance(hardwareMap, telemetry, "BLUE");
+        turret = new Turret(hardwareMap, telemetry);
 
         // Initialize drivetrain
         drivetrain = new Drivetrain(hardwareMap, telemetry);
@@ -48,9 +48,6 @@ public class TurretPIDTuningOpMode extends OpMode {
 
     @Override
     public void start() {
-        turret.startLimelight();
-        turret.startTracking();
-
         telemetry.addData("Status", "Started - Turret tracking enabled");
         telemetry.update();
     }
@@ -79,29 +76,20 @@ public class TurretPIDTuningOpMode extends OpMode {
 
         // PID Constants
         telemetry.addLine("=== PID Constants (Tune via Dashboard) ===");
-        telemetry.addData("Kp", TurretConstants.kp);
-        telemetry.addData("Ki", TurretConstants.ki);
-        telemetry.addData("Kd", TurretConstants.kd);
-        telemetry.addData("Kf", TurretConstants.kf);
-        telemetry.addLine("");
-
-        // AprilTag Detection
-        telemetry.addLine("=== AprilTag Detection ===");
-        telemetry.addData("Detected", turret.hasTarget() ? "YES" : "NO");
-        telemetry.addData("TX (deg)", String.format("%.2f", turret.getTx()));
+        telemetry.addData("Kp", TurretConstants.kP);
+        telemetry.addData("Ki", TurretConstants.kI);
+        telemetry.addData("Kd", TurretConstants.kD);
+        telemetry.addData("Kf", TurretConstants.kF);
         telemetry.addLine("");
 
         // Turret Status
         telemetry.addLine("=== Turret Status ===");
-        telemetry.addData("Current Angle", String.format("%.2f°", turret.getCurrentAngle()));
-        telemetry.addData("Encoder Position", turret.getEncoderPosition());
-        telemetry.addData("Has Target", turret.hasTarget() ? "YES" : "NO");
-        telemetry.addData("Tracking State", turret.getSystemState().toString());
+        telemetry.addData("Current Angle", String.format("%.2f°", turret.getCurrentPosition()));
         telemetry.addLine("");
 
         // PID Tracking Info
         telemetry.addLine("=== PID Control ===");
-        telemetry.addData("Error (TX)", String.format("%.2f°", turret.getTx()));
+        telemetry.addData("Error (TX)", String.format("%.2f°", turret.getPositionError()));
         telemetry.addData("Target Angle", "0° (centered)");
         telemetry.addLine("");
 
@@ -122,24 +110,14 @@ public class TurretPIDTuningOpMode extends OpMode {
         // ---------------------------
         // GAMEPAD TURRRET CONTROLS
         // ---------------------------
-        if (gamepad1.a) turret.startTracking();
-        if (gamepad1.b) turret.stopTracking();
-        if (gamepad1.x) turret.forceReturnToZero();
-        if (gamepad1.y) turret.setManualPowerControl(gamepad1.left_stick_x * 0.5);
-
-        if (gamepad1.dpad_left) {
-            turret.stopTracking();
-            turret.setAngle(-3.35);
-            turret.startTracking();
-        }
+        if (gamepad1.a) turret.setManualPower(0.3);
+        if (gamepad1.b) turret.setManualPower(-0.3);
 
         telemetry.update();
     }
 
     @Override
     public void stop() {
-        turret.stopLimelight();
-
         telemetry.addData("Status", "Stopped");
         telemetry.update();
     }

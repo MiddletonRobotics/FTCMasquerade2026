@@ -39,7 +39,7 @@ public class RevisedBlue12Ball extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "BLUE");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry, "BLUE");
+        turret = new Turret(hardwareMap, telemetry);
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
@@ -49,10 +49,6 @@ public class RevisedBlue12Ball extends CommandOpMode {
         register(drivetrain, intake, transfer, shooter, turret);
 
         follower.setMaxPower(0.85);
-
-        turret.stopTracking();
-
-        turret.relocalize();
 
         //turret.setAngle(-9.14);
 
@@ -67,7 +63,7 @@ public class RevisedBlue12Ball extends CommandOpMode {
                         //new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
                         new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
                         //new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
-                        new InstantCommand(() -> turret.setAngle(-3)),
+                        new InstantCommand(() -> turret.setPosition(-3)),
                         new InstantCommand(shooter::enableFlyWheel),
                         new InstantCommand(() -> shooter.setRPM(1250)),
                         //new InstantCommand(() -> turret.setAngle(-10)),

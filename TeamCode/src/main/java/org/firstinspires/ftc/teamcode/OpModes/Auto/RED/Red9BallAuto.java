@@ -43,7 +43,7 @@ public class Red9BallAuto extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "RED");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry, "RED");
+        turret = new Turret(hardwareMap, telemetry);
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
@@ -53,9 +53,6 @@ public class Red9BallAuto extends CommandOpMode {
         register(drivetrain, intake, transfer, shooter, turret);
 
         follower.setMaxPower(0.75);
-
-        turret.relocalize();
-        turret.stopTracking();
 
         //turret.setAngle(-9.14);
 
@@ -69,7 +66,7 @@ public class Red9BallAuto extends CommandOpMode {
                 new SequentialCommandGroup(
                         new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
                         //new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
-                        new InstantCommand(() -> turret.setAngle(-3)),
+                        new InstantCommand(() -> turret.setPosition(-3)),
                         new InstantCommand(shooter::enableFlyWheel),
                         new InstantCommand(() -> shooter.setRPM(1250)),
                         //new InstantCommand(() -> turret.setAngle(-10)),

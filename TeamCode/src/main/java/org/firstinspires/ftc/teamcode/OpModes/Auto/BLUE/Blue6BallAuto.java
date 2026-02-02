@@ -39,7 +39,7 @@ public class Blue6BallAuto extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "RED");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry, "RED");
+        turret = new Turret(hardwareMap, telemetry);
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
@@ -47,8 +47,6 @@ public class Blue6BallAuto extends CommandOpMode {
         follower.update();
 
         register(drivetrain, intake, transfer, shooter, turret);
-
-        turret.relocalize();
 
         //turret.setAngle(-9.14);
 
@@ -63,7 +61,6 @@ public class Blue6BallAuto extends CommandOpMode {
                         //new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
                         new InstantCommand(shooter::enableFlyWheel),
                         new InstantCommand(() -> shooter.setRPM(1680)),
-                        new InstantCommand(turret::startLimelight),
                         //new InstantCommand(() -> turret.setAngle(-10)),
                         new InstantCommand((transfer::init)),
                         new FollowPathCommand(follower, Path.Path1, true, 1 ),

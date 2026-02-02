@@ -42,7 +42,7 @@ public class Redfarside6ball extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "BlUE");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry, "BLUE");
+        turret = new Turret(hardwareMap, telemetry);
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
@@ -51,8 +51,6 @@ public class Redfarside6ball extends CommandOpMode {
         follower.setMaxPower(0.85);
 
         register(drivetrain, intake, transfer, shooter, turret);
-
-        turret.relocalize();
 
         //turret.setAngle(-9.14);
 

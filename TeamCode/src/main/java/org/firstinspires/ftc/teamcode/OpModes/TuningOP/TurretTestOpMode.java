@@ -35,7 +35,7 @@ public class TurretTestOpMode extends OpMode {
         dashboardTelemetry = dashboard.getTelemetry();
 
         // Initialize Turret subsystem (includes Limelight initialization)
-        turret = Turret.getInstance(hardwareMap, telemetry, "RED");
+        turret = new Turret(hardwareMap, telemetry);
 
         telemetry.addData("Status", "Initialized");
         telemetry.addData("Instructions", "Connect to FTC Dashboard to tune PID values");
@@ -50,10 +50,6 @@ public class TurretTestOpMode extends OpMode {
         // Start Limelight polling
         dt.follower.startTeleopDrive();
         dt.follower.setMaxPower(.8);
-        turret.startLimelight();
-
-        // Start auto-tracking AprilTags
-        turret.startTracking();
 
         telemetry.addData("Status", "Started");
         telemetry.addData("Turret", "Tracking AprilTags");
@@ -69,26 +65,20 @@ public class TurretTestOpMode extends OpMode {
         dt.periodic();
 
         // Display telemetry
-        telemetry.addData("Turret Has Target", turret.hasTarget());
-        telemetry.addData("Turret TX", String.format("%.2f", turret.getTx()));
-        telemetry.addData("Turret Angle", String.format("%.2f", turret.getCurrentAngle()));
-        telemetry.addData("Turret Encoder", turret.getEncoderPosition());
+        telemetry.addData("Turret Encoder", turret.getCurrentPosition());
         telemetry.addData("---", "---");
         telemetry.addData("FTC Dashboard", "http://192.168.43.1:8080/dash");
         telemetry.addData("Tune PID", "Adjust kp, ki, kd, kf in TurretConstants");
         telemetry.update();
 
         // Also send to dashboard
-        dashboardTelemetry.addData("Turret Has Target", turret.hasTarget());
-        dashboardTelemetry.addData("Turret TX", String.format("%.2f", turret.getTx()));
-        dashboardTelemetry.addData("Turret Angle", String.format("%.2f", turret.getCurrentAngle()));
+        dashboardTelemetry.addData("Turret Angle", String.format("%.2f", turret.getCurrentPosition()));
         dashboardTelemetry.update();
     }
 
     @Override
     public void stop() {
         // Stop Limelight polling
-        turret.stopLimelight();
 
         telemetry.addData("Status", "Stopped");
         telemetry.update();

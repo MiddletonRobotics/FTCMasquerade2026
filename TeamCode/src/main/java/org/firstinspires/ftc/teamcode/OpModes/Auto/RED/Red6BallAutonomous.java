@@ -40,7 +40,7 @@ public class Red6BallAutonomous extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "RED");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry, "RED");
+        turret = new Turret(hardwareMap, telemetry);
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
@@ -48,8 +48,6 @@ public class Red6BallAutonomous extends CommandOpMode {
         follower.update();
 
         register(drivetrain, intake, transfer, shooter, turret);
-
-        turret.relocalize();
         //turret.setAngle(-9.14);
 
         Path = new Red6BallPath(follower);

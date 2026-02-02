@@ -65,6 +65,10 @@ public class Turret extends SubsystemBase {
         return Math.toRadians(normalizeAngle(((turretMotor.getVelocity() / 537.7) / TurretConstants.kTurretRatio) * 360));
     }
 
+    public double getPositionError() {
+        return pidfController.getPositionError();
+    }
+
     public void setManualPower(double speed) {
         telemetry.addData("Turret Setpoint Open Loop", speed);
         turretMotor.setPower(speed);
@@ -88,10 +92,10 @@ public class Turret extends SubsystemBase {
         turretMotor.setPower(MathUtility.clamp(pidfController.calculate(getCurrentPosition(), radians), -0.65, 0.45) + ffController.calculate(Math.toDegrees(200)));
     }
 
-    public double computeAngle(Pose2d robotPose, Pose targetPose, double turretOffsetX, double turretOffsetY) {
+    public double computeAngle(Pose robotPose, Pose targetPose, double turretOffsetX, double turretOffsetY) {
         double robotX = robotPose.getX();
         double robotY = robotPose.getY();
-        double robotHeading = robotPose.getRotation().getRadians();
+        double robotHeading = robotPose.getHeading();
 
         double turretX = robotX + turretOffsetX * Math.cos(robotHeading) - turretOffsetY * Math.sin(robotHeading);
         double turretY = robotY + turretOffsetX * Math.sin(robotHeading) + turretOffsetY * Math.cos(robotHeading);

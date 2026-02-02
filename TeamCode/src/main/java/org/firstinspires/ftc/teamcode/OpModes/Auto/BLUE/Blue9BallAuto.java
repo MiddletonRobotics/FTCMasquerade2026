@@ -41,7 +41,7 @@ public class Blue9BallAuto extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "BLUE");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry, "BLUE");
+        turret = new Turret(hardwareMap, telemetry);
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
@@ -52,13 +52,9 @@ public class Blue9BallAuto extends CommandOpMode {
 
         follower.setMaxPower(1);
 
-        turret.relocalize();
-
         //turret.setAngle(-9.14);
 
         Path = new Blue9BallPath(follower);
-
-        turret.stopTracking();
 
         //Begins
         schedule(
@@ -68,7 +64,7 @@ public class Blue9BallAuto extends CommandOpMode {
                 new SequentialCommandGroup(
                         new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
                 //new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
-                new InstantCommand(() -> turret.setAngle(-3)),
+                new InstantCommand(() -> turret.setPosition(-3)),
                 new InstantCommand(shooter::enableFlyWheel),
                 new InstantCommand(() -> shooter.setRPM(1250)),
                 //new InstantCommand(() -> turret.setAngle(-10)),

@@ -14,7 +14,6 @@ public class blueTestOP extends OpMode {
     public void init() {
         Robot = new Masquerade(hardwareMap, telemetry, gamepad1, gamepad2, "BLUE");
         Robot.reset();
-        Robot.turret.stopTracking();
         Robot.transfer.openGate();
     }
 
@@ -22,7 +21,6 @@ public class blueTestOP extends OpMode {
     public void start() {
         Robot.dt.follower.setMaxPower(1);
         Robot.start();
-        Robot.turret.setAngle(-2);
     }
 
     @Override

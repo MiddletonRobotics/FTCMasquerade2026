@@ -43,7 +43,7 @@ public class Blue6BallFarsideAuto extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "BlUE");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry, "BLUE");
+        turret = new Turret(hardwareMap, telemetry);
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
@@ -52,8 +52,6 @@ public class Blue6BallFarsideAuto extends CommandOpMode {
         follower.setMaxPower(0.85);
 
         register(drivetrain, intake, transfer, shooter, turret);
-
-        turret.relocalize();
 
         //turret.setAngle(-9.14);
 
@@ -66,10 +64,8 @@ public class Blue6BallFarsideAuto extends CommandOpMode {
                 new SequentialCommandGroup(
                         new InstantCommand(shooter::enableFlyWheel),
                         new InstantCommand(shooter::shootFar),
-                        new InstantCommand(() -> turret.setAngle(125)),
+                        new InstantCommand(() -> turret.setPosition(125)),
                         new InstantCommand(() -> shooter.setHoodServoPos(0.40)),
-                        new InstantCommand(turret::startLimelight),
-                        new InstantCommand(turret::startTracking),
                         new InstantCommand((transfer::init)),
                         new FollowPathCommand(follower, Path.Path1, true, 1),
                         new WaitCommand(1000),
@@ -92,7 +88,7 @@ public class Blue6BallFarsideAuto extends CommandOpMode {
                         new InstantCommand(intake::stopIntake),
                         new InstantCommand(shooter::disableFlyWheel),
                         new FollowPathCommand(follower, Path.Path4, true, 1),
-                        new InstantCommand(() -> turret.setAngle(-3)),
+                        new InstantCommand(() -> turret.setPosition(-3)),
                         new resetCommand(intake, shooter, drivetrain, turret, transfer)
                 )
         );

@@ -32,8 +32,6 @@ public class redTestOP extends OpMode {
     public void start() {
         Robot.dt.follower.setMaxPower(0.85);
         Robot.start();
-        Robot.turret.setAngle(-3);
-        Robot.turret.startTracking();
     }
 
     @Override

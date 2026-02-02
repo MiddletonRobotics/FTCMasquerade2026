@@ -31,8 +31,7 @@ public class InitializeCommand extends SequentialCommandGroup {
         addCommands(
                 new InstantCommand(shooter::enableFlyWheel),
                 new InstantCommand(shooter::shootMid),
-                new InstantCommand(turret::startLimelight),
-                new InstantCommand(() -> turret.setAngle(8)),
+                new InstantCommand(() -> turret.setPosition(8)),
                 new InstantCommand((transfer::init))
         );
     }

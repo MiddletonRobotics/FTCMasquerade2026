@@ -41,7 +41,7 @@ public class newRed6Ball extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "RED");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry, "RED");
+        turret = new Turret(hardwareMap, telemetry);
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
@@ -49,8 +49,6 @@ public class newRed6Ball extends CommandOpMode {
         follower.update();
 
         register(drivetrain, intake, transfer, shooter, turret);
-
-        turret.relocalize();
 
         //turret.setAngle(-9.14);
 
@@ -81,7 +79,7 @@ public class newRed6Ball extends CommandOpMode {
                         new InstantCommand(intake::stopIntake),
                         new FollowPathCommand(follower, Path.Path3, true, 1).alongWith(new InstantCommand(intake::intake)),
                         new InstantCommand(shooter::shootMid),
-                        new InstantCommand(() -> turret.setAngle(-2.5)),
+                        new InstantCommand(() -> turret.setPosition(-2.5)),
                         new WaitCommand(500),
                         new InstantCommand(transfer::openGate).andThen(new WaitCommand(1000)),
                         new InstantCommand(intake::intake),

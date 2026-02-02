@@ -7,6 +7,7 @@ import com.seattlesolvers.solverslib.command.Robot;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.constants.GlobalConstants;
 
 public class Masquerade extends Robot {
     public Drivetrain dt;
@@ -37,7 +38,7 @@ public class Masquerade extends Robot {
         intake = new Intake(hmap, telemetry);
         shooter = new Shooter(hmap, telemetry, Alliance);
         transfer = new servoTransfer(hmap, telemetry);
-        turret = new Turret(hmap, telemetry, Alliance);
+        turret = new Turret(hmap, telemetry);
         endGame = new servoTilt(hmap, telemetry);
 
         driver1 = new GamepadEx(d1);
@@ -57,7 +58,8 @@ public class Masquerade extends Robot {
         intake.periodic();
         transfer.periodic();
         shooter.periodic();
-        turret.periodic();
+
+        turret.setPosition(turret.computeAngle(dt.follower.getPose(), turret.getTargetPose(GlobalConstants.allianceColor), 0, 0)); // set turret offset here
 
         // run transfer state machine every loop
         rapidFire();
@@ -68,7 +70,7 @@ public class Masquerade extends Robot {
     @Override
     public void reset() {
         shooter.disableFlyWheel();
-        turret.stopTracking();
+        turret.setManualPower(0.0);
         intake.stopIntake();
         transfer.init();
         dt.resetHeading();
@@ -80,7 +82,6 @@ public class Masquerade extends Robot {
     public void start() {
         dt.follower.setMaxPower(0.9);
         dt.follower.startTeleopDrive();
-        turret.setAngle(-3.321);
     }
 
     public void controlMap() {

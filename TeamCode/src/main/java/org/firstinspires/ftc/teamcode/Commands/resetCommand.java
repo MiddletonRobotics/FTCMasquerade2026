@@ -30,10 +30,9 @@ public class resetCommand extends SequentialCommandGroup {
         addCommands(
                 new InstantCommand(intake::stopIntake),
                 new InstantCommand(shooter::disableFlyWheel),
-                new InstantCommand(turret::stopLimelight),
                 new InstantCommand(transfer::init),
                 new InstantCommand(() -> shooter.setHoodServoPos(0.0)),
-                new InstantCommand(() -> turret.setAngle(-3.32))
+                new InstantCommand(() -> turret.setPosition(-3.32))
         );
     }
 }
