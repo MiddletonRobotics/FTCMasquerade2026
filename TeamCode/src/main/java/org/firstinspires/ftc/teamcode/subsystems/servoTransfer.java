@@ -22,7 +22,6 @@ public class servoTransfer extends SubsystemBase {
     public servoTransfer(HardwareMap hmap, Telemetry telemetry) {
         pitchServo = new ServoEx(hmap, transferConstants.pitchServoID);
         yawServo = new ServoEx(hmap, transferConstants.yawServoID);
-        transferSensor = hmap.get(RevColorSensorV3.class, "transferSensor");
 
         yawServo.setInverted(false);
 
@@ -69,28 +68,10 @@ public class servoTransfer extends SubsystemBase {
     }
 
     //Sensor
-    public double getSensorDistance() {
-        return transferSensor.getDistance(DistanceUnit.INCH);
-    }
-
-    public boolean artifactDetected() {
-        return transferSensor.getDistance(DistanceUnit.INCH) < 1.25;
-    }
-
-    public void autoKick() {
-        if(artifactDetected()) {
-            extendPitch();
-        }
-        else {
-            retractPitch();
-        }
-    }
 
     @Override
     public void periodic() {
         telemetry.addData(("Is the kicker Extended: "), kickerExtended);
         telemetry.addData(("Gate Open"), gateOpen);
-        telemetry.addData(("transferSensor Distance: "), getSensorDistance());
-        telemetry.addData(("Artifact Detected: "), artifactDetected());
     }
 }

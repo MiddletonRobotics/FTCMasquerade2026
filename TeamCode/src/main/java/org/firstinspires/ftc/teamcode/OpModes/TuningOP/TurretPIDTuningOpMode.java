@@ -35,7 +35,7 @@ public class TurretPIDTuningOpMode extends OpMode {
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
         // Initialize turret
-        turret = new Turret(hardwareMap, telemetry);
+        turret = new Turret(hardwareMap, telemetry, "BLUE");
 
         // Initialize drivetrain
         drivetrain = new Drivetrain(hardwareMap, telemetry);

@@ -41,7 +41,7 @@ public class newRed6Ball extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "RED");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry);
+        turret = new Turret(hardwareMap, telemetry, "RED");
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 

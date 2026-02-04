@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static org.firstinspires.ftc.teamcode.constants.GlobalConstants.allianceColor;
+
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -30,9 +32,13 @@ public class Turret extends SubsystemBase {
     private PIDFController pidfController;
     private SimpleMotorFeedforward ffController;
 
+    private final double gearRatio = 36/174;
+
+    private String Alliance;
+
     private final Telemetry telemetry;
 
-    public Turret(HardwareMap hMap, Telemetry telemetry) {
+    public Turret(HardwareMap hMap, Telemetry telemetry, String Alliance) {
         turretMotor = hMap.get(DcMotorEx.class, TurretConstants.turretMotorID);
         turretMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -44,6 +50,18 @@ public class Turret extends SubsystemBase {
         ffController = new SimpleMotorFeedforward(TurretConstants.kS, TurretConstants.kV, TurretConstants.kA);
 
         this.telemetry = telemetry;
+
+        this.Alliance = Alliance.toUpperCase();
+    }
+
+    private void AllianceSelector() {
+        if(Alliance.equals("BLUE")) {
+            allianceColor = GlobalConstants.AllianceColor.BLUE;
+        }
+
+        else {
+            allianceColor = GlobalConstants.AllianceColor.RED;
+        }
     }
 
     @Override
@@ -85,13 +103,14 @@ public class Turret extends SubsystemBase {
         telemetry.addData("Turret Setpoint Position", radians);
         telemetry.addData("Turret Primary Position Error", pidfController.getPositionError());
         telemetry.addData("Turret Primary At Setpoint?", pidfController.atSetPoint());
+        telemetry.addData("Turret Motor Power", turretMotor.getPower());
 
         if(GlobalConstants.kTuningMode) {
             pidfController.setPIDF(TurretConstants.kP, TurretConstants.kI, TurretConstants.kD, TurretConstants.kF);
         }
 
         pidfController.setSetPoint(radians);
-        turretMotor.setPower(MathUtility.clamp(pidfController.calculate(getCurrentPosition(), radians), -0.65, 0.45) + ffController.calculate(Math.toDegrees(200)));
+        turretMotor.setPower(MathUtility.clamp(pidfController.calculate(getCurrentPosition(), radians), -0.65, 0.45) + ffController.calculate(Math.toRadians(200)));
     }
 
     public double computeAngle(Pose robotPose, Pose targetPose, double turretOffsetX, double turretOffsetY) {
@@ -107,8 +126,7 @@ public class Turret extends SubsystemBase {
 
         double targetAngleGlobal = Math.atan2(dy, dx);
         double desiredTurretAngle = targetAngleGlobal - robotHeading;
-        double normalizedAngle = AngleUnit.normalizeRadians(desiredTurretAngle);
-        return MathUtility.clamp(normalizedAngle, -((37 * Math.PI) / 64), ((3 * Math.PI) / 4));
+        return AngleUnit.normalizeRadians(desiredTurretAngle);
     }
 
     public Pose getTargetPose(GlobalConstants.AllianceColor allianceColor) {

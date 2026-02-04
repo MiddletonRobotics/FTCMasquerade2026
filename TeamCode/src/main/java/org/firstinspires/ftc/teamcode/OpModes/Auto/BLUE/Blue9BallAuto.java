@@ -31,7 +31,7 @@ public class Blue9BallAuto extends CommandOpMode {
 
     private Drivetrain drivetrain;
     private servoTransfer transfer;
-    private Turret turret;
+//    private Turret turret;
 
     private Blue9BallPath Path;
     private Masquerade Robot;
@@ -41,14 +41,14 @@ public class Blue9BallAuto extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "BLUE");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry);
+//        turret = new Turret(hardwareMap, telemetry, "BLUE");
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
         follower.setStartingPose(new Pose(20.15, 122.56,Math.toRadians(144)));
         follower.update();
 
-        register(drivetrain, intake, transfer, shooter, turret);
+        register(drivetrain, intake, transfer, shooter);
 
         follower.setMaxPower(1);
 
@@ -60,11 +60,11 @@ public class Blue9BallAuto extends CommandOpMode {
         schedule(
                 new WaitUntilCommand(this::opModeIsActive),
                 new RunCommand(follower::update),
-                new RunCommand(turret::periodic),
+//                new RunCommand(turret::periodic),
                 new SequentialCommandGroup(
-                        new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
+//                        new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
                 //new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
-                new InstantCommand(() -> turret.setPosition(-3)),
+//                new InstantCommand(() -> turret.setPosition(-3)),
                 new InstantCommand(shooter::enableFlyWheel),
                 new InstantCommand(() -> shooter.setRPM(1250)),
                 //new InstantCommand(() -> turret.setAngle(-10)),
@@ -108,8 +108,8 @@ public class Blue9BallAuto extends CommandOpMode {
                 new InstantCommand(transfer::extendPitch).andThen(new WaitCommand(750)),
                 new InstantCommand(transfer::retractPitch),
                 new InstantCommand(shooter::stopMotor),
-                new FollowPathCommand(follower, Path.Path6, true, 1),
-                new resetCommand(intake, shooter, drivetrain, turret, transfer)
+                new FollowPathCommand(follower, Path.Path6, true, 1)
+//                new resetCommand(intake, shooter, drivetrain, turret, transfer)
                 )
         );
     }

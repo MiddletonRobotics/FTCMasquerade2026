@@ -43,7 +43,7 @@ public class Blue6BallFarsideAuto extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "BlUE");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry);
+        turret = new Turret(hardwareMap, telemetry, "BLUE");
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 

@@ -37,9 +37,9 @@ public class Blue6BallAuto extends CommandOpMode {
     @Override
     public void initialize() {
         intake = new Intake(hardwareMap, telemetry);
-        shooter = new Shooter(hardwareMap, telemetry, "RED");
+        shooter = new Shooter(hardwareMap, telemetry, "BLUE");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry);
+        turret = new Turret(hardwareMap, telemetry, "BlUE");
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 

@@ -33,7 +33,7 @@ public class Constants {
             .lateralZeroPowerAcceleration(-78.8335152);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
-            .maxPower(1)
+            .useBrakeModeInTeleOp(true)
             .rightFrontMotorName(DrivetrainConstants.fRMotorID)
             .rightRearMotorName(DrivetrainConstants.bRMotorID)
             .leftRearMotorName(DrivetrainConstants.bLMotorID)

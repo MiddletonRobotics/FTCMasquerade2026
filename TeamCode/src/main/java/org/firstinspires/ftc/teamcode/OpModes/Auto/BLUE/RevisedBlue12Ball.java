@@ -29,7 +29,6 @@ public class RevisedBlue12Ball extends CommandOpMode {
 
     private Drivetrain drivetrain;
     private servoTransfer transfer;
-    private Turret turret;
 
     private newBlue12th Path;
     private Masquerade Robot;
@@ -39,18 +38,16 @@ public class RevisedBlue12Ball extends CommandOpMode {
         intake = new Intake(hardwareMap, telemetry);
         shooter = new Shooter(hardwareMap, telemetry, "BLUE");
         drivetrain = new Drivetrain(hardwareMap, telemetry);
-        turret = new Turret(hardwareMap, telemetry);
         transfer = new servoTransfer(hardwareMap, telemetry);
         follower = drivetrain.follower;
 
         follower.setStartingPose(new Pose(20.15, 122.56, Math.toRadians(144)));
         follower.update();
 
-        register(drivetrain, intake, transfer, shooter, turret);
+        register(drivetrain, intake, transfer, shooter);
 
-        follower.setMaxPower(0.85);
+        follower.setMaxPower(.9);
 
-        //turret.setAngle(-9.14);
 
         Path = new newBlue12th(follower);
 
@@ -58,45 +55,39 @@ public class RevisedBlue12Ball extends CommandOpMode {
         schedule(
                 new WaitUntilCommand(this::opModeIsActive),
                 new RunCommand(follower::update),
-                new RunCommand(turret::periodic),
                 new SequentialCommandGroup(
-                        //new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
-                        new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
-                        //new InitializeCommand(intake, shooter, drivetrain, turret, transfer),
-                        new InstantCommand(() -> turret.setPosition(-3)),
                         new InstantCommand(shooter::enableFlyWheel),
                         new InstantCommand(() -> shooter.setRPM(1250)),
-                        //new InstantCommand(() -> turret.setAngle(-10)),
                         new InstantCommand((transfer::init)),
                         new FollowPathCommand(follower, Path.Path1, true, 1),
                         new WaitCommand(1000),
                         new InstantCommand(intake::intake).andThen(new WaitCommand(1000)),
                         new InstantCommand(transfer::extendPitch),
-                        new WaitCommand(1000),
+                        new WaitCommand(750),
                         new InstantCommand(intake::stopIntake),
                         new InstantCommand(transfer::retractPitch),
                         new InstantCommand(shooter::idleRPM),
                         new InstantCommand(transfer::closeGate),
-                        new InstantCommand(() -> follower.setMaxPower(0.75)),
-                        new FollowPathCommand(follower, Path.Path2, false, 0.75).alongWith(new InstantCommand(intake::intake)),
-                        new WaitCommand(250),
+                        new InstantCommand(() -> follower.setMaxPower(1)),
+                        new FollowPathCommand(follower, Path.Path2, false, 1).alongWith(new InstantCommand(intake::intake)),
+                        new WaitCommand(500),
                         new InstantCommand(intake::stopIntake),
                         new InstantCommand(() -> follower.setMaxPower(1)),
                         new InstantCommand(() -> shooter.setRPM(1250)),
                         new FollowPathCommand(follower, Path.Path3, true, 1),
                         new WaitCommand(500),
-                        new InstantCommand(() -> follower.setMaxPower(0.85)),
+                        new InstantCommand(() -> follower.setMaxPower(1)),
                         new InstantCommand(transfer::openGate),
                         new InstantCommand(intake::intake),
                         new WaitCommand(1000),
                         new InstantCommand(transfer::extendPitch),
-                        new WaitCommand(750),
+                        new WaitCommand(500),
                         new InstantCommand(transfer::retractPitch),
                         new InstantCommand(shooter::idleRPM),
                         new InstantCommand(transfer::closeGate),
-                        new InstantCommand(() -> follower.setMaxPower(0.85)),
-                        new FollowPathCommand(follower, Path.Path4, false, .85).alongWith(new InstantCommand(intake::intake)),
-                        new WaitCommand(250),
+                        new InstantCommand(() -> follower.setMaxPower(1)),
+                        new FollowPathCommand(follower, Path.Path4, false, 1).alongWith(new InstantCommand(intake::intake)),
+                        new WaitCommand(500),
                         new InstantCommand(intake::stopIntake),
                         new InstantCommand(() -> shooter.setRPM(1250)),
                         new InstantCommand(() -> follower.setMaxPower(1)),
@@ -104,12 +95,12 @@ public class RevisedBlue12Ball extends CommandOpMode {
                         new WaitCommand(500),
                         new InstantCommand(transfer::openGate),
                         new InstantCommand(intake::intake).andThen(new WaitCommand(1000)),
-                        new InstantCommand(transfer::extendPitch).andThen(new WaitCommand(750)),
+                        new InstantCommand(transfer::extendPitch).andThen(new WaitCommand(250)),
                         new InstantCommand(transfer::retractPitch),
                         new InstantCommand(transfer::closeGate),
-                        new InstantCommand(() -> follower.setMaxPower(.85)),
-                        new FollowPathCommand(follower, Path.Path6, true, .85).alongWith(new InstantCommand(intake::intake)),
-                        new WaitCommand(250),
+                        new InstantCommand(() -> follower.setMaxPower(1)),
+                        new FollowPathCommand(follower, Path.Path6, true, 1).alongWith(new InstantCommand(intake::intake)),
+                        new WaitCommand(500),
                         new InstantCommand(intake::stopIntake),
                         new InstantCommand(() -> shooter.setRPM(1250)),
                         new InstantCommand(() -> follower.setMaxPower(1)),
@@ -117,7 +108,7 @@ public class RevisedBlue12Ball extends CommandOpMode {
                         new WaitCommand(500),
                         new InstantCommand(transfer::openGate),
                         new InstantCommand(intake::intake).andThen(new WaitCommand(1000)),
-                        new InstantCommand(transfer::extendPitch).andThen(new WaitCommand(750)),
+                        new InstantCommand(transfer::extendPitch).andThen(new WaitCommand(500)),
                          new InstantCommand(transfer::retractPitch),
                         new InstantCommand(transfer::closeGate),
                         new InstantCommand(() -> follower.setMaxPower(1)),

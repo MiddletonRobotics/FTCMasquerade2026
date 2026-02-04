@@ -6,13 +6,13 @@ import com.acmerobotics.dashboard.config.Config;
 public class TurretConstants {
     public static final String turretMotorID = "turretMotor";
 
-    public static double kTurretRatio = 1;
+    public static double kTurretRatio = 36/174.0;
 
     //PIDF Constants - Tunable via FTC Dashboard
-    public static double kP = 0.0;
+    public static double kP = 0.009;
     public static double kI = 0.0;
-    public static double kD = 0.0;
-    public static double kF = 0.0;
+    public static double kD = 0.0002;
+    public static double kF = 1.25;
 
     public static double kS = 0.0;
     public static double kV = 0.0;
