@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.constants.DrivetrainConstants;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(14.56)
+            .mass(14.7794)
             .forwardZeroPowerAcceleration(-42.072)
             .lateralZeroPowerAcceleration(-67.58)
 

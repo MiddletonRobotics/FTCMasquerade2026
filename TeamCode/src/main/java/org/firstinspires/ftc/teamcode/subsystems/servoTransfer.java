@@ -13,6 +13,7 @@ public class servoTransfer extends SubsystemBase {
     private ServoEx pitchServo;
     private  ServoEx yawServo;
     private RevColorSensorV3 transferSensor;
+    private RevColorSensorV3 transfer2;
 
     private boolean kickerExtended;
     private boolean gateOpen;
@@ -23,13 +24,47 @@ public class servoTransfer extends SubsystemBase {
         pitchServo = new ServoEx(hmap, transferConstants.pitchServoID);
         yawServo = new ServoEx(hmap, transferConstants.yawServoID);
 
+        transferSensor = hmap.get(RevColorSensorV3.class, "transferSensor");
+        transfer2 = hmap.get(RevColorSensorV3.class, "transferSensor2");
+
         yawServo.setInverted(false);
 
         kickerExtended = false;
         gateOpen = true;
 
         this.telemetry = telemetry;
+
+        transferSensor.enableLed(false);
     }
+
+    //Sensor
+    public boolean artifactDetected() {
+        return transferSensor.getDistance(DistanceUnit.INCH) < 2;
+    }
+
+    public boolean transferDetect2() {
+        return transfer2.getDistance(DistanceUnit.INCH) < 2;
+    }
+
+    public double transferDistance() {
+        return transfer2.getDistance(DistanceUnit.INCH);
+    }
+
+    public double returnDistance() {
+        return transferSensor.getDistance(DistanceUnit.INCH);
+    }
+
+    public void AutoGate() {
+        if((transfer2.getDistance(DistanceUnit.INCH) < 6 || (transferSensor.getDistance(DistanceUnit.INCH)) < 6)){
+            closeGate();
+        }
+
+        else {
+            openGate();
+        }
+
+    }
+
 
     public void init() {
         pitchServo.set(0.00);
@@ -40,7 +75,7 @@ public class servoTransfer extends SubsystemBase {
     }
 
     public void extendPitch() {
-        pitchServo.set(0.70);
+        pitchServo.set(0.65);
         kickerExtended = true;
     }
 
@@ -73,5 +108,9 @@ public class servoTransfer extends SubsystemBase {
     public void periodic() {
         telemetry.addData(("Is the kicker Extended: "), kickerExtended);
         telemetry.addData(("Gate Open"), gateOpen);
+        telemetry.addData("Artificat Detected", artifactDetected());
+        telemetry.addData("Transfer Distance", returnDistance());
+        telemetry.addData("transferDistance 2", transferDistance());
+        telemetry.addData("transfer 2 Detection", transferDetect2());
     }
 }

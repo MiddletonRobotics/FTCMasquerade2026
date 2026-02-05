@@ -75,9 +75,8 @@ public class Masquerade extends Robot {
         transfer.periodic();
         shooter.periodic();
 
-//        turret.setPosition(turret.computeAngle(dt.follower.getPose(), turret.getTargetPose(GlobalConstants.allianceColor), 0, 0)); // set turret offset here
+        turret.setPosition(turret.computeAngle(dt.follower.getPose(), turret.getTargetPose(GlobalConstants.allianceColor), 0, 0)); // set turret offset here
 
-        // run transfer state machine every loop
         rapidFire();
         turret.periodic();
         telemetry.addData("Compute Angle", turret.computeAngle(dt.follower.getPose(), turret.getTargetPose(GlobalConstants.allianceColor), 0, 0));
@@ -92,13 +91,13 @@ public class Masquerade extends Robot {
         transfer.init();
         dt.resetHeading();
         dt.follower.setStartingPose(dt.follower.getPose());
-
         //resetRapid();
     }
 
     public void start() {
-        dt.follower.setMaxPower(0.9);
+        dt.follower.setMaxPower(1);
         dt.follower.startTeleopDrive();
+        turret.setPosition(0);
     }
 
     public void controlMap() {
@@ -152,16 +151,26 @@ public class Masquerade extends Robot {
             shooter.shootClose();
             shooter.setHoodServoPos(0.0);
         }
-        if (driver2.getButton(GamepadKeys.Button.DPAD_RIGHT)) {
-            shooter.shootFar();
-        }
         if (driver2.getButton(GamepadKeys.Button.DPAD_UP)) {
             shooter.shootMid();
+            shooter.setHoodServoPos(0.3);
+        }
+        if (driver2.getButton(GamepadKeys.Button.DPAD_RIGHT)) {
+            shooter.shootFar();
+            shooter.setHoodServoPos(0.42);
+        }
+
+        if (driver2.getButton(GamepadKeys.Button.DPAD_DOWN)) {
+            shooter.setRPM(2000);
             shooter.setHoodServoPos(0.42);
         }
 
         if (driver2.getButton(GamepadKeys.Button.X)) {
             shooter.enableFlyWheel();
+        }
+
+        if(driver1.getButton(GamepadKeys.Button.RIGHT_BUMPER)) {
+            turret.setPosition(0);
         }
 
 //        if(driver2.getButton(GamepadKeys.Button.B)) {
@@ -174,11 +183,11 @@ public class Masquerade extends Robot {
         if (transferState == -1) {
             // Manual flick: only command extend when trigger pressed;
             // don't constantly retract every loop unless you want that behavior.
-            if (driver2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0) {
+            if (driver2.getButton(GamepadKeys.Button.LEFT_BUMPER)) {
                 transfer.extendPitch();
             }
 
-            if(driver2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0){
+            else {
                 transfer.retractPitch();
             }
 
@@ -197,7 +206,6 @@ public class Masquerade extends Robot {
     }
 
     private void startTransfer() {
-        // start from a known safe state
         transfer.retractPitch();
         transfer.openGate();
         intake.stopIntake();

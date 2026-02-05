@@ -32,15 +32,13 @@ public class Turret extends SubsystemBase {
     private PIDFController pidfController;
     private SimpleMotorFeedforward ffController;
 
-    private final double gearRatio = 36/174;
-
     private String Alliance;
 
     private final Telemetry telemetry;
 
     public Turret(HardwareMap hMap, Telemetry telemetry, String Alliance) {
         turretMotor = hMap.get(DcMotorEx.class, TurretConstants.turretMotorID);
-        turretMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -67,7 +65,11 @@ public class Turret extends SubsystemBase {
     @Override
     public void periodic() {
         telemetry.addData("Turret Current Open Loop", turretMotor.getPower());
-        telemetry.addData("Turret Current Position", getCurrentPosition());
+        telemetry.addData("Turret Current Position in Degr", Math.toRadians(getCurrentPosition()));
+        telemetry.addData("Get Curret Position in Radians", getCurrentPosition());
+        telemetry.addData("At Setpoint Method:", isAtSetpoint());
+        telemetry.addData("Turret Raw", turretMotor.getCurrentPosition());
+        //telemetry.addData("Turret New Pose: ", turretMotor.getCurrentPosition() / ((537.0 * (174.0/36.0)) / 360.0));
     }
 
     public static double normalizeAngle(double angle) {
@@ -78,7 +80,11 @@ public class Turret extends SubsystemBase {
     }
 
     public double getCurrentPosition() {
-        return Math.toRadians(normalizeAngle(((turretMotor.getCurrentPosition() / 537.7) / TurretConstants.kTurretRatio) * 360));
+        return (((turretMotor.getCurrentPosition() / 537.7) / TurretConstants.kTurretRatio) * 360); //removed
+    }
+
+    public double getCurrentPositionVishals() {
+        return turretMotor.getCurrentPosition() / ((537.0 * (174.0/36.0)) / (2*Math.PI));
     }
 
     public double getCurrentVelocity() {
@@ -100,7 +106,8 @@ public class Turret extends SubsystemBase {
     }
 
     public void setPosition(double radians) {
-        telemetry.addData("Turret Setpoint Position", radians);
+
+        telemetry.addData("Turret Setpoint Position", Math.toDegrees(radians));
         telemetry.addData("Turret Primary Position Error", pidfController.getPositionError());
         telemetry.addData("Turret Primary At Setpoint?", pidfController.atSetPoint());
         telemetry.addData("Turret Motor Power", turretMotor.getPower());
@@ -110,7 +117,7 @@ public class Turret extends SubsystemBase {
         }
 
         pidfController.setSetPoint(radians);
-        turretMotor.setPower(MathUtility.clamp(pidfController.calculate(getCurrentPosition(), radians), -0.65, 0.45) + ffController.calculate(Math.toRadians(200)));
+        turretMotor.setPower(MathUtility.clamp(pidfController.calculate(getCurrentPosition(), radians), -.65, .45) + ffController.calculate(Math.toRadians(200))); //-.65 & .45
     }
 
     public double computeAngle(Pose robotPose, Pose targetPose, double turretOffsetX, double turretOffsetY) {
@@ -126,10 +133,15 @@ public class Turret extends SubsystemBase {
 
         double targetAngleGlobal = Math.atan2(dy, dx);
         double desiredTurretAngle = targetAngleGlobal - robotHeading;
+
         return AngleUnit.normalizeRadians(desiredTurretAngle);
     }
 
     public Pose getTargetPose(GlobalConstants.AllianceColor allianceColor) {
-        return allianceColor == GlobalConstants.AllianceColor.BLUE ? new Pose(144, 0, Units.degreesToRadians(135)) : new Pose(144, 144, Units.degreesToRadians(45));
+        return allianceColor == GlobalConstants.AllianceColor.BLUE ? new Pose(9, 138) : new Pose(9, 138).mirror();
+    }
+
+    public boolean isAtSetpoint() {
+        return pidfController.atSetPoint() && getCurrentVelocity() == 0;
     }
 }

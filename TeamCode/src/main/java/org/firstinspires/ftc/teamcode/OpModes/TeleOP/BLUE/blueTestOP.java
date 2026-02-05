@@ -19,7 +19,6 @@ public class blueTestOP extends OpMode {
 
     @Override
     public void start() {
-        Robot.dt.follower.setMaxPower(1);
         Robot.start();
     }
 
